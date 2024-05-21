@@ -11,5 +11,5 @@ setuptools.setup(
         'pantos.common.blockchains.contracts': ['*.abi'],
         'pantos.client.library.blockchains.contracts': ['*.abi']
     }, install_requires=[
-        'Cerberus==1.3.4', 'PyYAML==6.0', 'requests==2.31.0', 'web3==6.5.0'
+        'Cerberus==1.3.4', 'PyYAML==6.0', 'requests==2.32.0', 'web3==6.5.0'
     ])
