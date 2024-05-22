@@ -1,10 +1,10 @@
 import unittest.mock
 
 import pytest
+from pantos.common.blockchains.base import Blockchain
 
 from pantos.client.library.blockchains.fantom import FantomClient
 from pantos.client.library.blockchains.fantom import FantomClientError
-from pantos.common.blockchains.base import Blockchain
 
 
 @pytest.fixture(scope='module')

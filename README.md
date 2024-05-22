@@ -32,7 +32,26 @@ One of the most significant advantages of using Pantos is that the protocol has 
 
 #### Python Version
 
-The Pantos Client Library requires **Python 3.10**. Ensure that you have the correct Python version installed before the installation steps. You can download the latest version of Python from the official [Python website](https://www.python.org/downloads/).
+The Pantos Client Library supports **Python 3.10** or higher. Ensure that you have the correct Python version installed before the installation steps. You can download the latest version of Python from the official [Python website](https://www.python.org/downloads/).
+
+#### Library Versions
+
+The Pantos Client Library has been tested with the library versions specified in **poetry.lock**.
+
+#### Poetry
+
+Poetry is our tool of choice for dependency management and packaging.
+
+Installing: 
+https://python-poetry.org/docs/#installing-with-the-official-installer
+or
+https://python-poetry.org/docs/#installing-with-pipx
+
+By default poetry creates the venv directory under under ```{cache-dir}/virtualenvs```. If you opt for creating the virtualenv inside the project’s root directory, execute the following command:
+
+```bash
+poetry config virtualenvs.in-project true
+```
 
 ### 2.2  Installation Steps
 
@@ -47,30 +66,19 @@ $ git submodule init
 $ git submodule update --remote
 ```
 
-#### Virtual environment
+#### Libraries
 
-Create a virtual environment from the repository's root directory:
-
-```bash
-$ python -m venv .venv
-```
-
-Activate the virtual environment:
+Create the virtual environment and install the dependencies:
 
 ```bash
-$ source .venv/bin/activate
-```
-
-Install the required packages:
-```bash
-$ python -m pip install -r requirements.txt
+$ poetry install --no-root
 ```
 
 ## 3. Usage
 
 ### 3.1 Configuration
 
-The configuration can be found in **pantos-client-library.conf**.
+The configuration can be found in **client-library.yml**.
 
 The library already has a set configuration for our testnet environment, but feel free to adapt it to your needs.
 
@@ -111,12 +119,17 @@ except pc.PantosClientError:
     # Handle exception
     raise
 
+# Read private key from file
+if not pathlib.Path('my_client.keystore').exists():
+    raise FileNotFoundError('Keystore file not found')
+with open('my_client.keystore', 'r') as keystore_file:
+    keystore = keystore_file.read()
+
 # Example token transfer
 password = getpass.getpass('Keystore password: ')
 try:
-    private_key = pc.load_private_key(pc.Blockchain.ETHEREUM,
-                                      pathlib.Path('my_client.keystore'),
-                                      password)
+    private_key = pc.decrypt_private_key(pc.Blockchain.ETHEREUM, keystore,
+                                         password)
     task_id = pc.transfer_tokens(
         pc.Blockchain.ETHEREUM, pc.Blockchain.BNB_CHAIN, private_key,
         pc.BlockchainAddress('0xaAE34Ec313A97265635B8496468928549cdd4AB7'),

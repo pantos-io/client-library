@@ -1,6 +1,7 @@
 import unittest.mock
 
 import pytest
+from pantos.common.blockchains.base import Blockchain
 
 from pantos.client.library.blockchains.avalanche import AvalancheClient
 from pantos.client.library.blockchains.base import BlockchainClient
@@ -13,7 +14,6 @@ from pantos.client.library.blockchains.factory import get_blockchain_client
 from pantos.client.library.blockchains.fantom import FantomClient
 from pantos.client.library.blockchains.polygon import PolygonClient
 from pantos.client.library.blockchains.solana import SolanaClient
-from pantos.common.blockchains.base import Blockchain
 
 
 @pytest.fixture(autouse=True)

@@ -4,16 +4,17 @@
 import dataclasses
 import decimal
 
-from pantos.client.library.blockchains import get_blockchain_client
-from pantos.client.library.business.base import Interactor
-from pantos.client.library.business.base import InteractorError
-from pantos.client.library.configuration import get_blockchain_config
 from pantos.common.blockchains.base import Blockchain
 from pantos.common.types import AccountId
 from pantos.common.types import Amount
 from pantos.common.types import BlockchainAddress
 from pantos.common.types import TokenId
 from pantos.common.types import TokenSymbol
+
+from pantos.client.library.blockchains import get_blockchain_client
+from pantos.client.library.business.base import Interactor
+from pantos.client.library.business.base import InteractorError
+from pantos.client.library.configuration import get_blockchain_config
 
 
 class TokenInteractorError(InteractorError):

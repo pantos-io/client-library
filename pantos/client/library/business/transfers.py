@@ -7,12 +7,6 @@ import time
 import typing
 import uuid
 
-from pantos.client.library.blockchains import BlockchainClient
-from pantos.client.library.blockchains import get_blockchain_client
-from pantos.client.library.business.base import Interactor
-from pantos.client.library.business.base import InteractorError
-from pantos.client.library.business.bids import BidInteractor
-from pantos.client.library.business.tokens import TokenInteractor
 from pantos.common.blockchains.base import Blockchain
 from pantos.common.entities import BlockchainAddressBidPair
 from pantos.common.entities import ServiceNodeBid
@@ -21,6 +15,13 @@ from pantos.common.types import Amount
 from pantos.common.types import BlockchainAddress
 from pantos.common.types import PrivateKey
 from pantos.common.types import TokenId
+
+from pantos.client.library.blockchains import BlockchainClient
+from pantos.client.library.blockchains import get_blockchain_client
+from pantos.client.library.business.base import Interactor
+from pantos.client.library.business.base import InteractorError
+from pantos.client.library.business.bids import BidInteractor
+from pantos.client.library.business.tokens import TokenInteractor
 
 _DEFAULT_VALID_UNTIL_BUFFER = 120
 """Default "valid until" timestamp buffer for a token transfer in seconds."""

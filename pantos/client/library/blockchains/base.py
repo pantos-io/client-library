@@ -3,11 +3,8 @@
 """
 import abc
 import dataclasses
-import pathlib
 import typing
 
-from pantos.client.library.configuration import get_blockchain_config
-from pantos.client.library.exceptions import ClientLibraryError
 from pantos.common.blockchains.base import Blockchain
 from pantos.common.blockchains.base import BlockchainHandler
 from pantos.common.blockchains.base import BlockchainUtilities
@@ -19,6 +16,9 @@ from pantos.common.exceptions import ErrorCreator
 from pantos.common.types import AccountId
 from pantos.common.types import BlockchainAddress
 from pantos.common.types import PrivateKey
+
+from pantos.client.library.configuration import get_blockchain_config
+from pantos.client.library.exceptions import ClientLibraryError
 
 
 class BlockchainClientError(ClientLibraryError):
@@ -248,14 +248,13 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
         """
         pass
 
-    def load_private_key(self, keystore_path: pathlib.Path,
-                         password: str) -> PrivateKey:
-        """Load the private key from a password-encrypted keystore file.
+    def decrypt_private_key(self, keystore: str, password: str) -> PrivateKey:
+        """Decrypt the private key from a password-encrypted keystore.
 
         Parameters
         ----------
-        keystore_path : pathlib.Path
-            The path to the keystore file.
+        keystore : str
+            The keystore contents.
         password : str
             The password to decrypt the private key.
 
@@ -271,12 +270,12 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
 
         """
         try:
-            return PrivateKey(self._get_utilities().load_private_key(
-                keystore_path, password))
+            return PrivateKey(self._get_utilities().decrypt_private_key(
+                keystore, password))
         except Exception:
             raise self._create_error(
-                'unable to load a private key from a keystore file',
-                keystore_path=keystore_path)
+                'unable to load a private key from a keystore',
+                keystore=keystore)
 
     @abc.abstractmethod
     def read_external_token_address(

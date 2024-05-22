@@ -2,13 +2,13 @@
 
 """
 import pytest
-
-from pantos.client.library.blockchains.base import BlockchainClient
-from pantos.client.library.constants import TOKEN_SYMBOL_PAN
 from pantos.common.blockchains.base import Blockchain
 from pantos.common.entities import BlockchainAddress
 from pantos.common.entities import ServiceNodeBid
 from pantos.common.types import PrivateKey
+
+from pantos.client.library.blockchains.base import BlockchainClient
+from pantos.client.library.constants import TOKEN_SYMBOL_PAN
 
 _SERVICE_NODE_1 = BlockchainAddress(
     '0x5188287E724140aa3C432dCfE69E00992aF09d09')

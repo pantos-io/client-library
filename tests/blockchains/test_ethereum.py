@@ -1,10 +1,10 @@
 import unittest.mock
 
 import pytest
+from pantos.common.blockchains.base import Blockchain
 
 from pantos.client.library.blockchains.ethereum import EthereumClient
 from pantos.client.library.blockchains.ethereum import EthereumClientError
-from pantos.common.blockchains.base import Blockchain
 
 
 @pytest.fixture(scope='module')
@@ -141,9 +141,9 @@ def test_compute_transfer_from_signature_error(
 
 @unittest.mock.patch.object(EthereumClient, '_get_utilities',
                             return_value=MockedUtilities())
-@unittest.mock.patch.object(EthereumClient, '_create_hub_contract',
-                            return_value=MockedHubContract(
-                                [False, 'data1', 'data2', 'data3']))
+@unittest.mock.patch.object(
+    EthereumClient, '_create_hub_contract',
+    return_value=MockedHubContract([False, 'data1', 'data2', 'data3']))
 def test_read_service_node_url_error_service_node_inactive(
         mocked_hub_contract, mocked_utilities, ethereum_client,
         service_node_1):
@@ -153,9 +153,9 @@ def test_read_service_node_url_error_service_node_inactive(
 
 @unittest.mock.patch.object(EthereumClient, '_get_utilities',
                             return_value=MockedUtilities())
-@unittest.mock.patch.object(EthereumClient, '_create_hub_contract',
-                            return_value=MockedHubContract(
-                                [False, 'data1', 'data2']))
+@unittest.mock.patch.object(
+    EthereumClient, '_create_hub_contract',
+    return_value=MockedHubContract([False, 'data1', 'data2']))
 def test_read_service_node_url_error(mocked_hub_contract, mocked_utilities,
                                      ethereum_client, service_node_1):
     with pytest.raises(Exception):
@@ -164,9 +164,9 @@ def test_read_service_node_url_error(mocked_hub_contract, mocked_utilities,
 
 @unittest.mock.patch.object(EthereumClient, '_get_utilities',
                             return_value=MockedUtilities())
-@unittest.mock.patch.object(EthereumClient, '_create_hub_contract',
-                            return_value=MockedHubContract(
-                                [True, 'service_node_url', 'data2', 'data3']))
+@unittest.mock.patch.object(
+    EthereumClient, '_create_hub_contract', return_value=MockedHubContract(
+        [True, 'service_node_url', 'data2', 'data3', 'data4', 'data5']))
 def test_read_service_node_url_correct(mocked_hub_contract, mocked_utilities,
                                        ethereum_client, service_node_1):
     assert ethereum_client.read_service_node_url(

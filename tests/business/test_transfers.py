@@ -1,13 +1,13 @@
 import unittest.mock
 
 import pytest
+from pantos.common.blockchains.base import Blockchain
+from pantos.common.types import PrivateKey
 
 from pantos.client import BlockchainAddress
 from pantos.client.library.business.tokens import TokenInteractorError
 from pantos.client.library.business.transfers import TransferInteractor
 from pantos.client.library.business.transfers import TransferInteractorError
-from pantos.common.blockchains.base import Blockchain
-from pantos.common.types import PrivateKey
 
 
 @unittest.mock.patch(

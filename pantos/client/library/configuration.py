@@ -8,7 +8,7 @@ import typing
 from pantos.common.blockchains.base import Blockchain
 from pantos.common.configuration import Config
 
-_DEFAULT_FILE_NAME: typing.Final[str] = 'pantos-client-library.conf'
+_DEFAULT_FILE_NAME: typing.Final[str] = 'client-library.yml'
 """Default configuration file name."""
 
 config = Config(_DEFAULT_FILE_NAME)

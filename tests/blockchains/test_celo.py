@@ -1,10 +1,10 @@
 import unittest.mock
 
 import pytest
+from pantos.common.blockchains.base import Blockchain
 
 from pantos.client.library.blockchains.celo import CeloClient
 from pantos.client.library.blockchains.celo import CeloClientError
-from pantos.common.blockchains.base import Blockchain
 
 
 @pytest.fixture(scope='module')

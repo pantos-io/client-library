@@ -1,10 +1,10 @@
 import unittest.mock
 
 import pytest
+from pantos.common.blockchains.base import Blockchain
 
 from pantos.client.library.business.tokens import TokenInteractor
 from pantos.client.library.business.tokens import TokenInteractorError
-from pantos.common.blockchains.base import Blockchain
 
 
 class MockedBlockchainClient:

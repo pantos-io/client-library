@@ -3,8 +3,9 @@
 """
 import typing
 
-from pantos.client.library.blockchains.base import BlockchainClient
 from pantos.common.blockchains.base import Blockchain
+
+from pantos.client.library.blockchains.base import BlockchainClient
 
 _blockchain_clients: typing.Dict[Blockchain, BlockchainClient] = {}
 """Blockchain-specific client objects."""

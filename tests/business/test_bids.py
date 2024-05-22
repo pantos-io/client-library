@@ -2,12 +2,12 @@ import contextlib
 import unittest
 
 import pytest
+from pantos.common.blockchains.base import Blockchain
+from pantos.common.servicenodes import ServiceNodeClient
 
 from pantos.client.library.business.bids import BidInteractor
 from pantos.client.library.business.bids import BidInteractorError
 from pantos.client.library.business.tokens import TokenInteractor
-from pantos.common.blockchains.base import Blockchain
-from pantos.common.servicenodes import ServiceNodeClient
 
 
 class _Break(Exception):

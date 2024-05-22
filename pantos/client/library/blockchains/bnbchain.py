@@ -3,10 +3,11 @@ Smart Chain is Ethereum-compatible, the client implementation inherits
 from the pantos.client.library.blockchains.ethereum module.
 
 """
+from pantos.common.blockchains.base import Blockchain
+
 from pantos.client.library.blockchains import BlockchainClientError
 from pantos.client.library.blockchains.ethereum import EthereumClient
 from pantos.client.library.blockchains.ethereum import EthereumClientError
-from pantos.common.blockchains.base import Blockchain
 
 
 class BnbChainClientError(EthereumClientError):

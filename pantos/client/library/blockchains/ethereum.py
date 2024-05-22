@@ -7,16 +7,17 @@ import typing
 import eth_account.messages
 import hexbytes
 import web3
-
-from pantos.client.library.blockchains.base import BlockchainClient
-from pantos.client.library.blockchains.base import BlockchainClientError
-from pantos.client.library.constants import TOKEN_SYMBOL_PAN
+import web3.contract
 from pantos.common.blockchains.base import Blockchain
 from pantos.common.blockchains.base import NodeConnections
 from pantos.common.blockchains.enums import ContractAbi
 from pantos.common.blockchains.ethereum import EthereumUtilities
 from pantos.common.types import BlockchainAddress
 from pantos.common.types import PrivateKey
+
+from pantos.client.library.blockchains.base import BlockchainClient
+from pantos.client.library.blockchains.base import BlockchainClientError
+from pantos.client.library.constants import TOKEN_SYMBOL_PAN
 
 Web3Contract: typing.TypeAlias = NodeConnections.Wrapper[
     web3.contract.Contract]
@@ -175,7 +176,7 @@ class EthereumClient(BlockchainClient):
             hub_contract = self._create_hub_contract(node_connections)
             service_node_record = hub_contract.caller().getServiceNodeRecord(
                 service_node_address).get()
-            assert len(service_node_record) == 4
+            assert len(service_node_record) == 6
             service_node_active = service_node_record[0]
             if not service_node_active:
                 raise self._create_error(
@@ -203,7 +204,8 @@ class EthereumClient(BlockchainClient):
                 token_address=token_address)
 
     def _create_hub_contract(
-            self, node_connections: NodeConnections) -> Web3Contract:
+            self, node_connections: NodeConnections) \
+            -> NodeConnections.Wrapper[web3.contract.Contract]:
         try:
             return self._get_utilities().create_contract(
                 self._get_config()['hub'], ContractAbi.PANTOS_HUB,

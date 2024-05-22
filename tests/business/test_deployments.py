@@ -2,13 +2,13 @@ import unittest.mock
 
 import pytest
 import requests.exceptions
+from pantos.common.blockchains.base import Blockchain
+from pantos.common.types import PrivateKey
 
 from pantos.client.library.business.deployments import \
     TokenDeploymentInteractor
 from pantos.client.library.business.deployments import \
     TokenDeploymentInteractorError
-from pantos.common.blockchains.base import Blockchain
-from pantos.common.types import PrivateKey
 
 
 @unittest.mock.patch('pantos.client.library.business.deployments.uuid.UUID')
@@ -69,8 +69,8 @@ def test_deploy_token_valid_until_error(mocked_config, mocked_request):
 @unittest.mock.patch('pantos.client.library.business.deployments.uuid.UUID',
                      side_effect=requests.exceptions.HTTPError(''))
 @unittest.mock.patch('pantos.client.library.business.deployments.requests.get')
-@unittest.mock.patch('pantos.client.library.business.deployments.requests.post'
-                     )
+@unittest.mock.patch(
+    'pantos.client.library.business.deployments.requests.post')
 @unittest.mock.patch(
     'pantos.client.library.business.deployments.get_blockchain_client')
 @unittest.mock.patch('pantos.client.library.business.deployments.config')

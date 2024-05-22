@@ -4,10 +4,11 @@
 import ctypes as _ctypes
 import multiprocessing as _multiprocessing
 
+from pantos.common.configuration import ConfigError as _ConfigError
+
 from pantos.client.library.configuration import load_config as _load_config
 from pantos.client.library.exceptions import \
     ClientLibraryError as _ClientLibraryError
-from pantos.common.configuration import ConfigError as _ConfigError
 
 _initialized = _multiprocessing.Value(_ctypes.c_bool, False)
 

@@ -3,11 +3,12 @@
 """
 import typing
 
-from pantos.client.library.blockchains.base import BlockchainClient
-from pantos.client.library.blockchains.base import BlockchainClientError
 from pantos.common.blockchains.base import Blockchain
 from pantos.common.entities import ServiceNodeBid
 from pantos.common.types import BlockchainAddress
+
+from pantos.client.library.blockchains.base import BlockchainClient
+from pantos.client.library.blockchains.base import BlockchainClientError
 
 
 class SolanaClientError(BlockchainClientError):

@@ -7,6 +7,11 @@ import itertools
 import random
 import typing
 
+from pantos.common.blockchains.base import Blockchain
+from pantos.common.entities import ServiceNodeBid
+from pantos.common.servicenodes import ServiceNodeClient
+from pantos.common.types import BlockchainAddress
+
 from pantos.client.library.blockchains import get_blockchain_client
 from pantos.client.library.blockchains.base import BlockchainClient
 from pantos.client.library.business.base import Interactor
@@ -14,10 +19,6 @@ from pantos.client.library.business.base import InteractorError
 from pantos.client.library.business.tokens import TokenInteractor
 from pantos.client.library.configuration import config
 from pantos.client.library.constants import TOKEN_SYMBOL_PAN
-from pantos.common.blockchains.base import Blockchain
-from pantos.common.entities import ServiceNodeBid
-from pantos.common.servicenodes import ServiceNodeClient
-from pantos.common.types import BlockchainAddress
 
 
 class BidInteractorError(InteractorError):

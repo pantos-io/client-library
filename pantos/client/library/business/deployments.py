@@ -7,6 +7,12 @@ import typing
 import uuid
 
 import requests
+from pantos.common.blockchains.base import Blockchain
+from pantos.common.entities import ServiceNodeBid
+from pantos.common.entities import \
+    TokenDeploymentRequest as TokenDeploymentSubmissionRequest
+from pantos.common.types import BlockchainAddress
+from pantos.common.types import PrivateKey
 
 from pantos.client.library.blockchains import BlockchainClient
 from pantos.client.library.blockchains import get_blockchain_client
@@ -14,12 +20,6 @@ from pantos.client.library.business.base import Interactor
 from pantos.client.library.business.base import InteractorError
 from pantos.client.library.configuration import config
 from pantos.client.library.configuration import get_blockchain_config
-from pantos.common.blockchains.base import Blockchain
-from pantos.common.entities import ServiceNodeBid
-from pantos.common.entities import \
-    TokenDeploymentRequest as TokenDeploymentSubmissionRequest
-from pantos.common.types import BlockchainAddress
-from pantos.common.types import PrivateKey
 
 _DEPLOYMENT_RESOURCE = 'deployment'
 

@@ -1,9 +1,10 @@
 import unittest.mock
 
+from pantos.common.blockchains.base import Blockchain
+
 from pantos.client.library.api import deploy_pantos_compatible_token
 from pantos.client.library.business.deployments import \
     TokenDeploymentInteractor as _TokenDeploymentInteractor
-from pantos.common.blockchains.base import Blockchain
 
 
 @unittest.mock.patch('pantos.client.library.api._initialize_library')

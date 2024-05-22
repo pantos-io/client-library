@@ -4,14 +4,24 @@ exposed to the users of the library.
 """
 __all__ = [
     'Blockchain', 'BlockchainAddress', 'PantosClientError', 'PrivateKey',
-    'ServiceNodeBid', 'TokenSymbol', 'load_private_key',
+    'ServiceNodeBid', 'TokenSymbol', 'decrypt_private_key',
     'retrieve_service_node_bids', 'retrieve_token_balance', 'transfer_tokens',
     'deploy_pantos_compatible_token'
 ]
 
-import pathlib as _pathlib
 import typing as _typing
 import uuid as _uuid
+
+from pantos.common.blockchains.base import Blockchain
+from pantos.common.entities import \
+    BlockchainAddressBidPair as _BlockchainAddressBidPair
+from pantos.common.entities import ServiceNodeBid
+from pantos.common.types import AccountId as _AccountId
+from pantos.common.types import Amount as _Amount
+from pantos.common.types import BlockchainAddress
+from pantos.common.types import PrivateKey
+from pantos.common.types import TokenId as _TokenId
+from pantos.common.types import TokenSymbol
 
 from pantos.client.library import initialize_library as _initialize_library
 from pantos.client.library.blockchains import \
@@ -26,31 +36,21 @@ from pantos.client.library.business.transfers import \
 from pantos.client.library.constants import \
     TOKEN_SYMBOL_PAN as _TOKEN_SYMBOL_PAN
 from pantos.client.library.exceptions import ClientError as _ClientError
-from pantos.common.blockchains.base import Blockchain
-from pantos.common.entities import \
-    BlockchainAddressBidPair as _BlockchainAddressBidPair
-from pantos.common.entities import ServiceNodeBid
-from pantos.common.types import AccountId as _AccountId
-from pantos.common.types import Amount as _Amount
-from pantos.common.types import BlockchainAddress
-from pantos.common.types import PrivateKey
-from pantos.common.types import TokenId as _TokenId
-from pantos.common.types import TokenSymbol
 
 # Exception to be used by external client library users
 PantosClientError = _ClientError
 
 
-def load_private_key(blockchain: Blockchain, keystore_path: _pathlib.Path,
-                     password: str) -> PrivateKey:
-    """Load the private key from a password-encrypted keystore file.
+def decrypt_private_key(blockchain: Blockchain, keystore: str,
+                        password: str) -> PrivateKey:
+    """Decrypt the private key from a password-encrypted keystore.
 
     Parameters
     ----------
     blockchain : Blockchain
         The blockchain to load the private key for.
-    keystore_path : pathlib.Path
-        The path to the keystore file.
+    keystore: str
+        The keystore contents.
     password : str
         The password to decrypt the private key.
 
@@ -66,8 +66,8 @@ def load_private_key(blockchain: Blockchain, keystore_path: _pathlib.Path,
 
     """
     _initialize_library()
-    return _get_blockchain_client(blockchain).load_private_key(
-        keystore_path, password)
+    return _get_blockchain_client(blockchain).decrypt_private_key(
+        keystore, password)
 
 
 def retrieve_service_node_bids(

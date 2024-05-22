@@ -1,6 +1,7 @@
 **/__pycache__/
 *.egg-info/
 *.swp
+.coverage
 .DS_store
 .venv/
 .vscode/
