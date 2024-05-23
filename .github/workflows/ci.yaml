@@ -35,3 +35,4 @@ jobs:
         run: |
           # There are two prompts for the password
           cat password.keystore{,} | poetry run python3 example.py
+
