@@ -1,5 +1,7 @@
 name: Release Workflow
-run-name: ${{ (github.event.release.prerelease && 'Pre-') || ''}}Release for ${{ github.repository }} - ${{ github.event.release.tag_name }}
+
+run-name: ${{ (github.event.release.prerelease && 'Beta') || 'Prod'}} Release for ${{ github.repository }} - ${{ github.event.release.tag_name }}
+
 on:
   release:
     # Triggered on Pre-Releases and Releases
@@ -72,7 +74,7 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: common
+          name: build
           path: dist
 
   publish-pypi:
@@ -81,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/pantos-common/${{ needs.define-environment.outputs.version }}
+      url: https://pypi.org/project/pantos-${{ github.repository }}/${{ needs.define-environment.outputs.version }}
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
@@ -93,7 +95,7 @@ jobs:
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: common
+          name: build
           path: dist
 
       - name: Publish package distributions to PyPi
@@ -117,7 +119,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: common
+          name: build
           path: dist
 
       - name: List directory
@@ -131,7 +133,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: signed-common
+          name: signed-build
           path: release/*.whl
 
       - name: Upload release assets
@@ -175,3 +177,4 @@ jobs:
           allowUpdates: true
           tag: ${{ github.event.release.tag_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
+

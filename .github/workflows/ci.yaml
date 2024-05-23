@@ -9,4 +9,26 @@ on:
 jobs:
   shared:
     uses: pantos-io/ci-workflows/.github/workflows/python-ci.yml@v1
+    secrets: inherit
+
+  test-e2e:
+    needs: shared
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pantos-io/ci-workflows/.github/actions/install-python-deps@v1
+
+      - name: Setup keystore
+        run: |
+          echo "123456" > password.keystore
+          mkdir keystore
+          docker run --rm -v=.:/local ethereum/client-go account new --keystore /local/keystore --password /local/password.keystore
+          sudo chmod -R 777 keystore
+          mv keystore/UTC* ./my_client.keystore
+
+      - name: Run example
+        run: |
+          # There are two prompts for the password
+          cat password.keystore{,} | poetry run python3 example.py
 
