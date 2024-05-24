@@ -1,7 +1,7 @@
 """Module for Ethereum-specific clients and errors.
 
 """
-import random
+import secrets
 import typing
 
 import eth_account.messages
@@ -231,7 +231,7 @@ class EthereumClient(BlockchainClient):
     def __generate_sender_nonce(self, hub_contract: Web3Contract,
                                 sender_address: BlockchainAddress) -> int:
         while True:
-            sender_nonce = random.getrandbits(256)
+            sender_nonce = secrets.randbits(256)
             if hub_contract.caller().isValidSenderNonce(
                     sender_address, sender_nonce).get():
                 return sender_nonce
