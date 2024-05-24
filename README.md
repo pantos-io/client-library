@@ -24,7 +24,7 @@ The Pantos Client Library API exposes the following functionalities:
 
 ## 2. Installation
 
-### 2.1  Prerequisites
+### 2.1 Prerequisites
 
 Please make sure that your development environment meets the following requirements:
 
@@ -40,7 +40,19 @@ One of the most significant advantages of using Pantos is that the protocol has 
 
 The Pantos Client Library supports **Python 3.10** or higher. Ensure that you have the correct Python version installed before the installation steps. You can download the latest version of Python from the official [Python website](https://www.python.org/downloads/).
 
-#### Library Versions
+
+
+### 2.2 Pypi package
+
+The Pantos Client Library is available as a package from [Pypi](https://pypi.org/project/pantos-client-library/).
+
+```bash
+$ virtualenv env
+$ source env/bin/activate
+$ pip install pantos-client-library
+```
+
+### 2.3 Source code
 
 The Pantos Client Library has been tested with the library versions specified in **poetry.lock**.
 
@@ -53,13 +65,19 @@ https://python-poetry.org/docs/#installing-with-the-official-installer
 or
 https://python-poetry.org/docs/#installing-with-pipx
 
+You can use the following lines to install poetry using `virtualenv`.
+
+```bash
+$ virtualenv env
+$ source env/bin/activate
+$ pip install poetry
+```
+
 By default poetry creates the venv directory under under ```{cache-dir}/virtualenvs```. If you opt for creating the virtualenv inside the project’s root directory, execute the following command:
 
 ```bash
 poetry config virtualenvs.in-project true
 ```
-
-### 2.2  Installation Steps
 
 #### Clone the repository
 
@@ -68,13 +86,11 @@ Clone the repository to your local machine:
 ```bash
 $ git clone https://github.com/pantos-io/client-library.git
 $ cd client-library
-$ git submodule init
-$ git submodule update --remote
 ```
 
 #### Libraries
 
-Create the virtual environment and install the dependencies:
+Install the project dependencies:
 
 ```bash
 $ poetry install --no-root
@@ -166,4 +182,4 @@ except pc.PantosClientError:
 
 ## 4. Contributing
 
-At the moment, contributing to this project is not available. 
+For contributions check our [code of conduct](CODE_OF_CONDUCT.md).
