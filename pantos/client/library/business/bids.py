@@ -97,9 +97,10 @@ class BidInteractor(Interactor):
                 ]
             if len(cheapest_bid_pairs) == 0:
                 raise BidInteractorError('no active service node bids found')
+            sr = random.SystemRandom()
             service_node_address, service_node_bid = (
                 cheapest_bid_pairs[0] if len(cheapest_bid_pairs) == 1 else
-                random.choice(cheapest_bid_pairs))
+                sr.choice(cheapest_bid_pairs))
             return BidInteractor.CheapestServiceNodeBid(
                 service_node_address, service_node_bid)
         except BidInteractorError:
