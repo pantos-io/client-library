@@ -232,7 +232,7 @@ class EthereumClient(BlockchainClient):
                                 sender_address: BlockchainAddress) -> int:
         while True:
             sender_nonce_bytes = os.urandom(256)
-            sender_nonce = int.from_bytes(sender_nonce_bytes)
+            sender_nonce = int.from_bytes(sender_nonce_bytes, "big")
             if hub_contract.caller().isValidSenderNonce(
                     sender_address, sender_nonce).get():
                 return sender_nonce
