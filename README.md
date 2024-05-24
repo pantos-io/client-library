@@ -24,7 +24,7 @@ The Pantos Client Library API exposes the following functionalities:
 
 ## 2. Installation
 
-### 2.1 Prerequisite
+### 2.1 Prerequisites
 
 Please make sure that your development environment meets the following requirements:
 
