@@ -231,7 +231,8 @@ class EthereumClient(BlockchainClient):
     def __generate_sender_nonce(self, hub_contract: Web3Contract,
                                 sender_address: BlockchainAddress) -> int:
         while True:
-            sender_nonce = os.urandom(256)
+            sender_nonce_bytes = os.urandom(256)
+            sender_nonce = int.from_bytes(sender_nonce_bytes)
             if hub_contract.caller().isValidSenderNonce(
                     sender_address, sender_nonce).get():
                 return sender_nonce
