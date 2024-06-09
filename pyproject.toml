@@ -31,7 +31,7 @@ yapf = "0.40.1"
 pre-commit = "3.3.3"
 
 [tool.poetry.dependencies]
-pantos-common = "1.4.0"
+pantos-common = "1.4.1"
 python = "^3.10"
 Cerberus = "1.3.4"
 PyYAML = "6.0.1"
