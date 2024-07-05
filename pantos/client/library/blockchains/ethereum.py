@@ -15,6 +15,7 @@ from pantos.common.blockchains.ethereum import EthereumUtilities
 from pantos.common.types import BlockchainAddress
 from pantos.common.types import PrivateKey
 
+from pantos.client.library.blockchains.base import VERSIONED_CONTRACT_ABIS
 from pantos.client.library.blockchains.base import BlockchainClient
 from pantos.client.library.blockchains.base import BlockchainClientError
 from pantos.client.library.constants import TOKEN_SYMBOL_PAN
@@ -208,7 +209,8 @@ class EthereumClient(BlockchainClient):
             -> NodeConnections.Wrapper[web3.contract.Contract]:
         try:
             return self._get_utilities().create_contract(
-                self._get_config()['hub'], ContractAbi.PANTOS_HUB,
+                self._get_config()['hub'],
+                VERSIONED_CONTRACT_ABIS[ContractAbi.PANTOS_HUB],
                 node_connections)
         except Exception:
             raise self._create_error(
@@ -219,7 +221,9 @@ class EthereumClient(BlockchainClient):
             token_address: BlockchainAddress) -> Web3Contract:
         try:
             return self._get_utilities().create_contract(
-                token_address, ContractAbi.PANTOS_TOKEN, node_connections)
+                token_address,
+                VERSIONED_CONTRACT_ABIS[ContractAbi.PANTOS_TOKEN],
+                node_connections)
         except Exception:
             raise self._create_error(
                 'unable to create a token contract instance')
@@ -241,4 +245,4 @@ class EthereumClient(BlockchainClient):
         message = eth_account.messages.encode_defunct(base_message)
         signed_message = web3.Account.sign_message(message,
                                                    private_key=private_key)
-        return signed_message.signature.hex()
+        return signed_message.signature.to_0x_hex()

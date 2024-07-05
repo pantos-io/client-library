@@ -5,10 +5,13 @@ import abc
 import dataclasses
 import typing
 
+import semantic_version  # type: ignore
 from pantos.common.blockchains.base import Blockchain
 from pantos.common.blockchains.base import BlockchainHandler
 from pantos.common.blockchains.base import BlockchainUtilities
 from pantos.common.blockchains.base import BlockchainUtilitiesError
+from pantos.common.blockchains.base import VersionedContractAbi
+from pantos.common.blockchains.enums import ContractAbi
 from pantos.common.blockchains.factory import get_blockchain_utilities
 from pantos.common.blockchains.factory import initialize_blockchain_utilities
 from pantos.common.entities import ServiceNodeBid
@@ -19,6 +22,13 @@ from pantos.common.types import PrivateKey
 
 from pantos.client.library.configuration import get_blockchain_config
 from pantos.client.library.exceptions import ClientLibraryError
+
+_CONTRACTS_VERSION = semantic_version.Version('1.0.0')
+
+VERSIONED_CONTRACT_ABIS = {
+    contract_abi: VersionedContractAbi(contract_abi, _CONTRACTS_VERSION)
+    for contract_abi in ContractAbi
+}
 
 
 class BlockchainClientError(ClientLibraryError):
