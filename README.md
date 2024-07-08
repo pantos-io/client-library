@@ -152,11 +152,11 @@ password = getpass.getpass('Keystore password: ')
 try:
     private_key = pc.decrypt_private_key(pc.Blockchain.ETHEREUM, keystore,
                                          password)
-    task_id = pc.transfer_tokens(
+    token_transfer_response = pc.transfer_tokens(
         pc.Blockchain.ETHEREUM, pc.Blockchain.BNB_CHAIN, private_key,
         pc.BlockchainAddress('0xaAE34Ec313A97265635B8496468928549cdd4AB7'),
         pc.TokenSymbol('pan'), decimal.Decimal('3.1'))
-    print('Task ID of service node: {}'.format(task_id))
+    print(f'Token transfer response: {token_transfer_response}')
 except pc.PantosClientError:
     # Handle exception
     raise

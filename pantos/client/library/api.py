@@ -33,6 +33,8 @@ from pantos.client.library.business.tokens import \
     TokenInteractor as _TokenInteractor
 from pantos.client.library.business.transfers import \
     TransferInteractor as _TransferInteractor
+from pantos.client.library.business.transfers import \
+    TransferTokensResponse as _TransferTokensResponse
 from pantos.client.library.constants import \
     TOKEN_SYMBOL_PAN as _TOKEN_SYMBOL_PAN
 from pantos.client.library.exceptions import ClientError as _ClientError
@@ -148,7 +150,7 @@ def transfer_tokens(
         sender_private_key: PrivateKey, recipient_address: BlockchainAddress,
         source_token_id: _TokenId, token_amount: _Amount,
         service_node_bid: _typing.Optional[_BlockchainAddressBidPair] = None) \
-            -> _uuid.UUID:
+            -> _TransferTokensResponse:
     """Transfer tokens from a sender's account on a source blockchain to
     a recipient's account on a (possibly different) destination blockchain.
 
@@ -179,10 +181,8 @@ def transfer_tokens(
 
     Returns
     -------
-    uuid.UUID
-        The task ID of the chosen service node for the token transfer
-        (can be used for querying the status of the token transfer at
-        the service node).
+    TransferTokensResponse
+        The response of the token transfer.
 
     Raises
     ------

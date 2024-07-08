@@ -23,5 +23,3 @@ try:
 except pc.PantosClientError:
     # Handle exception
     raise
-
-# More examples on example 2.py
