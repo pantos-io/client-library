@@ -34,6 +34,24 @@ class TransferInteractorError(InteractorError):
     pass
 
 
+@dataclasses.dataclass
+class TransferTokensResponse:
+    """Response data for a new token transfer.
+
+    Attributes
+    ----------
+    task_id : uuid.UUID
+        The task ID of the chosen service node for the token
+        transfer.
+    service_node_address : BlockchainAddress
+        The address of the chosen service node for the token
+        transfer.
+
+    """
+    task_id: uuid.UUID
+    service_node_address: BlockchainAddress
+
+
 class TransferInteractor(Interactor):
     """Interactor for handling Pantos token transfers.
 
@@ -80,7 +98,8 @@ class TransferInteractor(Interactor):
         service_node_bid: typing.Optional[BlockchainAddressBidPair] = None
         valid_until_buffer: int = _DEFAULT_VALID_UNTIL_BUFFER
 
-    def transfer_tokens(self, request: TransferTokensRequest) -> uuid.UUID:
+    def transfer_tokens(
+            self, request: TransferTokensRequest) -> TransferTokensResponse:
         """Transfer tokens from a sender's account on a source
         blockchain to a recipient's account on a (possibly different)
         destination blockchain.
@@ -92,9 +111,8 @@ class TransferInteractor(Interactor):
 
         Returns
         -------
-        uuid.UUID
-            The task ID of the chosen service node for the token
-            transfer.
+        TransferTokensResponse
+            The response data of the token transfer.
 
         Raises
         ------
@@ -160,7 +178,7 @@ class TransferInteractor(Interactor):
                 signature)
             task_id = ServiceNodeClient().submit_transfer(
                 submit_transfer_request)
-            return task_id
+            return TransferTokensResponse(task_id, service_node_address)
         except TransferInteractorError:
             raise
         except Exception:
