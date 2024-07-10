@@ -5,6 +5,7 @@ from pantos.common.blockchains.base import Blockchain
 
 from pantos.client.library.blockchains.ethereum import EthereumClient
 from pantos.client.library.blockchains.ethereum import EthereumClientError
+from pantos.client.library.blockchains.ethereum import UnknownTransferError
 
 
 @pytest.fixture(scope='module')
@@ -219,6 +220,112 @@ def test_read_service_nodes_correct(mocked_hub_contract, mocked_utilities,
     ]
 
 
-def test_read_service_nodes_error(ethereum_client):
-    with pytest.raises(Exception):
-        ethereum_client.read_service_node_addresses()
+@pytest.mark.parametrize('transfer_to_event',
+                         [blockchain for blockchain in Blockchain],
+                         indirect=True)
+@unittest.mock.patch.object(EthereumClient, '_get_utilities')
+@unittest.mock.patch.object(EthereumClient, '_get_config')
+@unittest.mock.patch.object(EthereumClient, '_create_hub_contract')
+def test_read_destination_transfer_correct(
+        mocked_hub_contract, mocked_get_config, mocked_get_utilities,
+        transfer_to_event, ethereum_client, source_transaction_id,
+        block_number, transaction_hash, source_transfer_id,
+        destination_transfer_id, sender, recipient, source_token,
+        destination_token, amount, nonce, signer_addresses, signatures):
+    mocked_get_utilities().create_node_connections().\
+        eth.get_block_number().get_minimum_result.return_value = 1000
+    mocked_get_config().__getitem__.return_value = 5
+    expected_response = EthereumClient.DestinationTransferResponse(
+        1000, block_number, transaction_hash.hex(), source_transfer_id,
+        destination_transfer_id, sender, recipient, source_token,
+        destination_token, amount, nonce, signer_addresses,
+        [signature.hex() for signature in signatures])
+    mocked_get_utilities().get_logs.return_value = [transfer_to_event]
+    request = EthereumClient.DestinationTransferRequest(
+        transfer_to_event['args']['sourceBlockchainId'], source_transaction_id)
+
+    transfer_response = ethereum_client.read_destination_transfer(request)
+
+    assert expected_response == transfer_response
+
+
+@pytest.mark.parametrize('blocks_queried_expected', [{
+    'blocks_to_search': 10,
+    'last_block_number': 20,
+    'blocks_per_query': 5,
+    'expected': [(16, 20), (11, 15)]
+}, {
+    'blocks_to_search': 5,
+    'last_block_number': 15,
+    'blocks_per_query': 1,
+    'expected': [(15, 15), (14, 14), (13, 13), (12, 12), (11, 11)]
+}, {
+    'blocks_to_search': 10,
+    'last_block_number': 20,
+    'blocks_per_query': 15,
+    'expected': [(11, 20)]
+}, {
+    'blocks_to_search': 10,
+    'last_block_number': 20,
+    'blocks_per_query': 7,
+    'expected': [(14, 20), (11, 13)]
+}, {
+    'blocks_to_search': 1,
+    'last_block_number': 15,
+    'blocks_per_query': 5,
+    'expected': [(15, 15)]
+}])
+@unittest.mock.patch.object(EthereumClient, '_get_utilities')
+@unittest.mock.patch.object(EthereumClient, '_get_config')
+@unittest.mock.patch.object(EthereumClient, '_create_hub_contract')
+def test_read_destination_transfer_correct_blocks_queried(
+        mocked_hub_contract, mocked_get_config, mocked_get_utilities,
+        blocks_queried_expected, ethereum_client):
+    mocked_get_utilities().create_node_connections().\
+        eth.get_block_number().get_minimum_result.return_value = \
+        blocks_queried_expected['last_block_number']
+    mocked_get_config().__getitem__.return_value = \
+        blocks_queried_expected['blocks_per_query']
+    mocked_get_utilities().get_logs.return_value = []
+    request = EthereumClient.DestinationTransferRequest(
+        Blockchain.ETHEREUM, '0x0',
+        blocks_queried_expected['blocks_to_search'])
+
+    with pytest.raises(UnknownTransferError):
+        ethereum_client.read_destination_transfer(request)
+
+    get_logs_blocks_queried = []
+    for call_args in mocked_get_utilities().get_logs.call_args_list:
+        get_logs_blocks_queried.append((call_args[0][1], call_args[0][2]))
+
+    assert blocks_queried_expected['expected'] == get_logs_blocks_queried
+
+
+@unittest.mock.patch.object(EthereumClient, '_get_utilities')
+@unittest.mock.patch.object(EthereumClient, '_get_config')
+@unittest.mock.patch.object(EthereumClient, '_create_hub_contract')
+def test_read_destination_transfer_unkown_transfer(mocked_hub_contract,
+                                                   mocked_get_config,
+                                                   mocked_get_utilities,
+                                                   ethereum_client):
+    mocked_get_utilities().create_node_connections().eth.get_block_number(
+    ).get_minimum_result.return_value = 1000
+    mocked_get_config().__getitem__.return_value = 5
+    mocked_get_utilities().get_logs.return_value = []
+
+    request = EthereumClient.DestinationTransferRequest(
+        Blockchain.ETHEREUM, '0x0')
+
+    with pytest.raises(UnknownTransferError):
+        ethereum_client.read_destination_transfer(request)
+
+
+@unittest.mock.patch.object(EthereumClient, '_get_utilities',
+                            side_effect=Exception)
+def test_read_destination_transfer_error(mocked_get_utilities,
+                                         ethereum_client):
+    request = EthereumClient.DestinationTransferRequest(
+        Blockchain.ETHEREUM, '0x0')
+
+    with pytest.raises(EthereumClientError):
+        ethereum_client.read_destination_transfer(request)

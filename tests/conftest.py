@@ -1,6 +1,7 @@
-"""Shared fixtures for all pantos.client.lbrary.business package tests.
+"""Shared fixtures for all pantos.client.library package tests.
 
 """
+import hexbytes
 import pytest
 from pantos.common.blockchains.base import Blockchain
 from pantos.common.entities import BlockchainAddress
@@ -9,6 +10,38 @@ from pantos.common.types import PrivateKey
 
 from pantos.client.library.blockchains.base import BlockchainClient
 from pantos.client.library.constants import TOKEN_SYMBOL_PAN
+
+_BLOCK_NUMBER = 1
+
+_TRANSACTION_HASH = hexbytes.HexBytes(
+    '3273482cfbf640bd5a7056fc3fd418275d2537bb49638035e19f2c4ebcf2e3d9')
+
+_SOURCE_TRANSFER_ID = 2
+
+_DESTINATION_TRANSFER_ID = 3
+
+_SENDER = BlockchainAddress('0x4958c0CdDb1649e8da454657733BA7AeC7069765')
+
+_RECIPIENT = BlockchainAddress('0xDc825BC1Af2d4c02E9e2d03fF3b492A09d168124')
+
+_SOURCE_TOKEN = BlockchainAddress('0x57FeAEC5F8f3A19264d8DfF24a88dA9F774e30a2')
+
+_DESTINATION_TOKEN = BlockchainAddress(
+    '0x49716ea49473c8B1164d2F503e50319D629CFFC6')
+
+_AMOUNT = 100
+
+_NONCE = 11111
+
+_SIGNER_ADDRESSES = [
+    BlockchainAddress('0xBb608811Bfc5fc3444863BC589C7e5F50DF1936a')
+]
+
+_SIGNATURES = [
+    hexbytes.HexBytes(
+        '665b95365f0724784d5c2792ca870ff4bf08b06590ac068f6f89ae7edf640bdd3'
+        'aaa116b69b2e0927a3151de498f5f0131beafbadb6c12c1756baa532d931fa81c')
+]
 
 _SERVICE_NODE_1 = BlockchainAddress(
     '0x5188287E724140aa3C432dCfE69E00992aF09d09')
@@ -91,3 +124,90 @@ def transfer_from_signature_request():
         destination_token_address=_TOKEN_ADDRESS, token_amount=100,
         service_node_address=_SERVICE_NODE_1, service_node_bid=_BIDS_1[0],
         valid_until=1000)
+
+
+@pytest.fixture(scope='module')
+def source_transaction_id():
+    return _TRANSACTION_HASH
+
+
+@pytest.fixture(scope='module')
+def block_number():
+    return _BLOCK_NUMBER
+
+
+@pytest.fixture(scope='module')
+def transaction_hash():
+    return _TRANSACTION_HASH
+
+
+@pytest.fixture(scope='module')
+def source_transfer_id():
+    return _SOURCE_TRANSFER_ID
+
+
+@pytest.fixture(scope='module')
+def destination_transfer_id():
+    return _DESTINATION_TRANSFER_ID
+
+
+@pytest.fixture(scope='module')
+def sender():
+    return _SENDER
+
+
+@pytest.fixture(scope='module')
+def recipient():
+    return _RECIPIENT
+
+
+@pytest.fixture(scope='module')
+def source_token():
+    return _SOURCE_TOKEN
+
+
+@pytest.fixture(scope='module')
+def destination_token():
+    return _DESTINATION_TOKEN
+
+
+@pytest.fixture(scope='module')
+def amount():
+    return _AMOUNT
+
+
+@pytest.fixture(scope='module')
+def nonce():
+    return _NONCE
+
+
+@pytest.fixture(scope='module')
+def signer_addresses():
+    return _SIGNER_ADDRESSES
+
+
+@pytest.fixture(scope='module')
+def signatures():
+    return _SIGNATURES
+
+
+@pytest.fixture(scope='function')
+def transfer_to_event(request):
+    return {
+        'blockNumber': _BLOCK_NUMBER,
+        'transactionHash': _TRANSACTION_HASH,
+        'args': {
+            'sourceBlockchainId': request.param.value,
+            'sourceTransactionId': _TRANSACTION_HASH,
+            'sourceTransferId': _SOURCE_TRANSFER_ID,
+            'destinationTransferId': _DESTINATION_TRANSFER_ID,
+            'sender': _SENDER,
+            'recipient': _RECIPIENT,
+            'sourceToken': _SOURCE_TOKEN,
+            'destinationToken': _DESTINATION_TOKEN,
+            'amount': _AMOUNT,
+            'nonce': _NONCE,
+            'signerAddresses': _SIGNER_ADDRESSES,
+            'signatures': _SIGNATURES
+        }
+    }

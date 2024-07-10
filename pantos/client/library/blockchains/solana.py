@@ -75,6 +75,12 @@ class SolanaClient(BlockchainClient):
         # Docstring inherited
         raise NotImplementedError
 
+    def read_destination_transfer(
+            self, request: BlockchainClient.DestinationTransferRequest) \
+            -> BlockchainClient.DestinationTransferResponse:
+        # Docstring inherited
+        raise NotImplementedError
+
     def read_token_decimals(self, token_address: BlockchainAddress) -> int:
         # Docstring inherited
         raise NotImplementedError

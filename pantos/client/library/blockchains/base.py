@@ -38,6 +38,15 @@ class BlockchainClientError(ClientLibraryError):
     pass
 
 
+class UnknownTransferError(BlockchainClientError):
+    """Exception raised for unknown token transfers.
+
+    """
+    def __init__(self, **kwargs: typing.Any):
+        # Docstring inherited
+        super().__init__('unknown transfer', **kwargs)
+
+
 class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
     """Base class for all blockchain clients.
 
@@ -124,6 +133,82 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
         sender_address: BlockchainAddress
         sender_nonce: int
         signature: str
+
+    @dataclasses.dataclass
+    class DestinationTransferRequest:
+        """Request data for a token transfer on the destination
+        blockchain.
+
+        Attributes
+        ----------
+        source_blockchain : Blockchain
+            The token transfer's source blockchain.
+        source_transaction_id : str
+            The transaction ID of the token transfer on the
+            source blockchain.
+        blocks_to_search : int | None
+            The blocks to search for the token transfer on the
+            destination blockchain.
+
+        """
+        source_blockchain: Blockchain
+        source_transaction_id: str
+        blocks_to_search: int | None = None
+
+    @dataclasses.dataclass
+    class DestinationTransferResponse:
+        """Response data for a token transfer on the destination
+        blockchain.
+
+        Attributes
+        ----------
+        latest_block_number : int
+            The latest block number on the destination blockchain.
+        transaction_block_number : int
+            The block number of the token transfer transaction.
+        destination_transaction_id : str
+            The transaction ID of the token transfer.
+        source_transfer_id : int
+            The unique identifier of the token transfer on the source
+            blockchain.
+        destination_transfer_id : int
+            The unique identifier of the token transfer on the
+            destination blockchain.
+        sender_address : BlockchainAddress
+            The address of the sender's account.
+        recipient_address : BlockchainAddress
+            The address of the recipient's account.
+        source_token_address : BlockchainAddress
+            The transferred token's address on the source blockchain.
+        destination_token_address : BlockchainAddress
+            The transferred token's address on the destination
+            blockchain.
+        amount : int
+            The transferred token amount.
+        validator_nonce : int
+            The unique nonce of the validator for the token transfer on
+            the destination blockchain.
+        signer_addresses : list of BlockchainAddress
+            The addresses of the validators which signed the token
+            transfer on the destination blockchain.
+        signatures : list of str
+            The signatures of the validators which signed the token
+            transfer on the destination blockchain.
+
+        """
+        latest_block_number: int
+        transaction_block_number: int
+        destination_transaction_id: str
+        source_transfer_id: int
+        destination_transfer_id: int
+        sender_address: BlockchainAddress
+        recipient_address: BlockchainAddress
+        source_token_address: BlockchainAddress
+        destination_token_address: BlockchainAddress
+        amount: int
+        validator_nonce: int
+        signer_addresses: list[BlockchainAddress]
+        signatures: list[str]
 
     @abc.abstractmethod
     def compute_transfer_signature(
@@ -289,9 +374,9 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
 
     @abc.abstractmethod
     def read_external_token_address(
-        self, token_address: BlockchainAddress,
-        destination_blockchain: Blockchain
-    ) -> BlockchainAddress:  # pragma: no cover
+            self, token_address: BlockchainAddress,
+            destination_blockchain: Blockchain) \
+            -> BlockchainAddress:  # pragma: no cover
         """Read an external token address that is registered at the
         Pantos Hub on the blockchain.
 
@@ -338,8 +423,8 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
 
     @abc.abstractmethod
     def read_service_node_url(
-            self, service_node_address: BlockchainAddress
-    ) -> str:  # pragma: no cover
+            self, service_node_address: BlockchainAddress) \
+            -> str:  # pragma: no cover
         """Read a service node's URL that is registered at the Pantos
         Hub on the blockchain.
 
@@ -358,6 +443,32 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
         BlockchainClientError
             If the service node's registered URL cannot be read or if
             the service node is not active.
+
+        """
+        pass
+
+    @abc.abstractmethod
+    def read_destination_transfer(
+            self, request: DestinationTransferRequest) \
+            -> DestinationTransferResponse:  # pragma: no cover
+        """Read a token transfer on the destination blockchain.
+
+        Parameters
+        ----------
+        request : DestinationTransferRequest
+            The request data for reading the token transfer.
+
+        Returns
+        -------
+        DestinationTransferResponse
+            The response data with the token transfer information.
+
+        Raises
+        ------
+        UnknownTransferError
+            If the token transfer is unkown.
+        BlockchainClientError
+            If the token transfer cannot be read.
 
         """
         pass
@@ -417,6 +528,11 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
 
         """
         pass
+
+    def _create_unknown_transfer_error(
+            self, **kwargs: typing.Any) -> BlockchainClientError:
+        return self._create_error(specialized_error_class=UnknownTransferError,
+                                  **kwargs)
 
     def _account_id_to_account_address(
             self, account_id: AccountId) -> BlockchainAddress:

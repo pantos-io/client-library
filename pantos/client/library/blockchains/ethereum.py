@@ -8,6 +8,7 @@ import eth_account.messages
 import hexbytes
 import web3
 import web3.contract
+import web3.types
 from pantos.common.blockchains.base import Blockchain
 from pantos.common.blockchains.base import NodeConnections
 from pantos.common.blockchains.enums import ContractAbi
@@ -18,6 +19,7 @@ from pantos.common.types import PrivateKey
 from pantos.client.library.blockchains.base import VERSIONED_CONTRACT_ABIS
 from pantos.client.library.blockchains.base import BlockchainClient
 from pantos.client.library.blockchains.base import BlockchainClientError
+from pantos.client.library.blockchains.base import UnknownTransferError
 from pantos.client.library.constants import TOKEN_SYMBOL_PAN
 
 Web3Contract: typing.TypeAlias = NodeConnections.Wrapper[
@@ -192,6 +194,40 @@ class EthereumClient(BlockchainClient):
             raise self._create_error('unable to read a service node URL',
                                      service_node_address=service_node_address)
 
+    def read_destination_transfer(
+            self, request: BlockchainClient.DestinationTransferRequest) \
+            -> BlockchainClient.DestinationTransferResponse:
+        # Docstring inherited
+        try:
+            node_connections = self._get_utilities().create_node_connections()
+            to_block_number = \
+                node_connections.eth.get_block_number().get_minimum_result()
+            from_block_number = (to_block_number - request.blocks_to_search +
+                                 1 if request.blocks_to_search else 0)
+            blocks_per_query = self._get_config()['blocks_per_query']
+            hub_contract = self._create_hub_contract(node_connections)
+            transfer_event = typing.cast(
+                NodeConnections.Wrapper[web3.contract.contract.ContractEvent],
+                hub_contract.events.TransferTo())
+            for to_block_number_ in range(to_block_number + 1,
+                                          from_block_number,
+                                          -blocks_per_query):
+                from_block_number_ = max(to_block_number_ - blocks_per_query,
+                                         from_block_number)
+                transfer_event_logs = self._get_utilities().get_logs(
+                    transfer_event, from_block_number_, to_block_number_ - 1)
+                transfer_response = self.__find_destination_transfer(
+                    transfer_event_logs, request.source_transaction_id,
+                    request.source_blockchain, to_block_number)
+                if transfer_response:
+                    return transfer_response
+            raise self._create_unknown_transfer_error(request=request)
+        except UnknownTransferError:
+            raise
+        except Exception:
+            raise self._create_error('unable to read a destination transfer',
+                                     request=request)
+
     def read_token_decimals(self, token_address: BlockchainAddress) -> int:
         # Docstring inherited
         try:
@@ -246,3 +282,33 @@ class EthereumClient(BlockchainClient):
         signed_message = web3.Account.sign_message(message,
                                                    private_key=private_key)
         return signed_message.signature.to_0x_hex()
+
+    def __find_destination_transfer(
+            self, transfer_event_logs: list[web3.types.EventData],
+            source_transaction_id: str, source_blockchain_id: int,
+            to_block_number: int) \
+            -> BlockchainClient.DestinationTransferResponse | None:
+        for transfer_event_log in transfer_event_logs:
+            transfer_event_args = transfer_event_log['args']
+            if (transfer_event_args['sourceTransactionId']
+                    == source_transaction_id
+                    and transfer_event_args['sourceBlockchainId']
+                    == source_blockchain_id):
+                return BlockchainClient.DestinationTransferResponse(
+                    to_block_number, transfer_event_log['blockNumber'],
+                    transfer_event_log['transactionHash'].hex(),
+                    transfer_event_args['sourceTransferId'],
+                    transfer_event_args['destinationTransferId'],
+                    BlockchainAddress(transfer_event_args['sender']),
+                    BlockchainAddress(transfer_event_args['recipient']),
+                    BlockchainAddress(transfer_event_args['sourceToken']),
+                    BlockchainAddress(transfer_event_args['destinationToken']),
+                    transfer_event_args['amount'],
+                    transfer_event_args['nonce'], [
+                        BlockchainAddress(signer_address) for signer_address in
+                        transfer_event_args['signerAddresses']
+                    ], [
+                        signature.hex()
+                        for signature in transfer_event_args['signatures']
+                    ])
+        return None
