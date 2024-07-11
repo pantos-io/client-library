@@ -36,6 +36,11 @@ _VALIDATION_SCHEMA_BLOCKCHAIN = {
             'type': 'integer',
             'required': True
         },
+        'blocks_per_query': {
+            'type': 'integer',
+            'required': True,
+            'min': 1
+        },
         'chain_id': {
             'type': 'integer',
             'required': True
