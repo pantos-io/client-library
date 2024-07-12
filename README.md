@@ -161,6 +161,16 @@ except pc.PantosClientError:
     # Handle exception
     raise
 
+# Example of getting a token transfer status
+try:
+    token_transfer_status = pc.get_token_transfer_status(
+        pc.Blockchain.ETHEREUM, token_transfer_response.service_node_address,
+        token_transfer_response.task_id)
+    print(f'Token transfer status: {token_transfer_status}')
+except pc.PantosClientError:
+    # Handle exception
+    raise
+
 # Example of deploying a token contract
 password = getpass.getpass('Keystore password: ')
 try:

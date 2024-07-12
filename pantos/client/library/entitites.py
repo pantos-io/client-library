@@ -10,7 +10,7 @@ from pantos.common.entities import ServiceNodeTransferStatus
 from pantos.common.types import BlockchainAddress
 
 
-class DestinationTransferStatus(enum.Enum):
+class DestinationTransferStatus(enum.IntEnum):
     """Enumeration of the possible destination transfer statuses.
 
     """
