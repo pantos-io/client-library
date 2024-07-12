@@ -268,11 +268,6 @@ class EthereumClient(BlockchainClient):
         # Docstring inherited
         return typing.cast(EthereumUtilities, super()._get_utilities())
 
-    def _create_unknown_transfer_error(
-            self, **kwargs: typing.Any) -> BlockchainClientError:
-        return self._create_error(specialized_error_class=UnknownTransferError,
-                                  **kwargs)
-
     def __generate_sender_nonce(self, hub_contract: Web3Contract,
                                 sender_address: BlockchainAddress) -> int:
         while True:

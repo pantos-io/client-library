@@ -10,6 +10,7 @@ import uuid
 from pantos.common.blockchains.base import Blockchain
 from pantos.common.entities import BlockchainAddressBidPair
 from pantos.common.entities import ServiceNodeBid
+from pantos.common.entities import ServiceNodeTransferStatus
 from pantos.common.servicenodes import ServiceNodeClient
 from pantos.common.types import Amount
 from pantos.common.types import BlockchainAddress
@@ -18,10 +19,15 @@ from pantos.common.types import TokenId
 
 from pantos.client.library.blockchains import BlockchainClient
 from pantos.client.library.blockchains import get_blockchain_client
+from pantos.client.library.blockchains.base import UnknownTransferError
 from pantos.client.library.business.base import Interactor
 from pantos.client.library.business.base import InteractorError
 from pantos.client.library.business.bids import BidInteractor
 from pantos.client.library.business.tokens import TokenInteractor
+from pantos.client.library.configuration import get_blockchain_config
+from pantos.client.library.entitites import DestinationTransferStatus
+from pantos.client.library.entitites import ServiceNodeTaskInfo
+from pantos.client.library.entitites import TokenTransferStatus
 
 _DEFAULT_VALID_UNTIL_BUFFER = 120
 """Default "valid until" timestamp buffer for a token transfer in seconds."""
@@ -34,28 +40,33 @@ class TransferInteractorError(InteractorError):
     pass
 
 
-@dataclasses.dataclass
-class TransferTokensResponse:
-    """Response data for a new token transfer.
-
-    Attributes
-    ----------
-    task_id : uuid.UUID
-        The task ID of the chosen service node for the token
-        transfer.
-    service_node_address : BlockchainAddress
-        The address of the chosen service node for the token
-        transfer.
-
-    """
-    task_id: uuid.UUID
-    service_node_address: BlockchainAddress
-
-
 class TransferInteractor(Interactor):
     """Interactor for handling Pantos token transfers.
 
     """
+    @dataclasses.dataclass
+    class TokenTransferStatusRequest:
+        """Request data for the status of a token transfer.
+
+        Attributes
+        ----------
+        source_blockchain : Blockchain
+            The token transfer's source blockchain.
+        service_node_address : BlockchainAddress
+            The address of the service node that is processing the
+            token transfer.
+        service_node_task_id : uuid.UUID
+            The service node task ID of the token transfer.
+        blocks_to_search : int or None
+            The number of blocks to search for the token transfer
+            (default: None).
+
+        """
+        source_blockchain: Blockchain
+        service_node_address: BlockchainAddress
+        service_node_task_id: uuid.UUID
+        blocks_to_search: int | None = None
+
     @dataclasses.dataclass
     class TransferTokensRequest:
         """Request data for a new token transfer.
@@ -98,8 +109,8 @@ class TransferInteractor(Interactor):
         service_node_bid: typing.Optional[BlockchainAddressBidPair] = None
         valid_until_buffer: int = _DEFAULT_VALID_UNTIL_BUFFER
 
-    def transfer_tokens(
-            self, request: TransferTokensRequest) -> TransferTokensResponse:
+    def transfer_tokens(self,
+                        request: TransferTokensRequest) -> ServiceNodeTaskInfo:
         """Transfer tokens from a sender's account on a source
         blockchain to a recipient's account on a (possibly different)
         destination blockchain.
@@ -111,8 +122,8 @@ class TransferInteractor(Interactor):
 
         Returns
         -------
-        TransferTokensResponse
-            The response data of the token transfer.
+        ServiceNodeTaskInfo
+            Service node-related information of a token transfer.
 
         Raises
         ------
@@ -176,14 +187,77 @@ class TransferInteractor(Interactor):
                 find_token_addresses_response.destination_token_address,
                 token_amount, service_node_bid, sender_nonce, valid_until,
                 signature)
-            task_id = ServiceNodeClient().submit_transfer(
+            service_node_task_id = ServiceNodeClient().submit_transfer(
                 submit_transfer_request)
-            return TransferTokensResponse(task_id, service_node_address)
+            return ServiceNodeTaskInfo(service_node_task_id,
+                                       service_node_address)
         except TransferInteractorError:
             raise
         except Exception:
             raise TransferInteractorError('unable to execute a token transfer',
                                           request=request)
+
+    def get_token_transfer_status(self, request: TokenTransferStatusRequest) \
+            -> TokenTransferStatus:
+        """Get the status of a token transfer.
+
+        Parameters
+        ----------
+        request : TokenTransferStatusRequest
+            The request data for the status of a token transfer.
+
+        Returns
+        -------
+        TokenTransferStatus
+            The data of the token transfer status.
+
+        Raises
+        ------
+        TransferInteractorError
+            If the token transfer status cannot be retrieved.
+
+        """
+        try:
+            service_node_url = get_blockchain_client(
+                request.source_blockchain).read_service_node_url(
+                    request.service_node_address)
+            source_status = ServiceNodeClient().status(
+                service_node_url, request.service_node_task_id)
+            token_transfer_status = \
+                self.__create_token_transfer_status_response(source_status)
+            if source_status.status is not ServiceNodeTransferStatus.CONFIRMED:
+                return token_transfer_status
+            source_transaction_id = source_status.transaction_id
+            token_transfer_status.source_transaction_id = source_transaction_id
+            token_transfer_status.source_transfer_id = \
+                source_status.transfer_id
+            destination_transfer_request = \
+                BlockchainClient.DestinationTransferRequest(
+                    request.source_blockchain, source_transaction_id)
+            try:
+                destination_response = get_blockchain_client(
+                    source_status.destination_blockchain
+                ).read_destination_transfer(destination_transfer_request)
+            except UnknownTransferError:
+                return token_transfer_status
+            token_transfer_status.destination_transfer_status = \
+                self.__get_destination_transfer_status(
+                    destination_response.latest_block_number,
+                    destination_response.transaction_block_number,
+                    source_status.destination_blockchain)
+            token_transfer_status.destination_transaction_id = \
+                destination_response.destination_transaction_id
+            token_transfer_status.destination_transfer_id = \
+                destination_response.destination_transfer_id
+            token_transfer_status.validator_nonce = \
+                destination_response.validator_nonce
+            token_transfer_status.signer_addresses = \
+                destination_response.signer_addresses
+            token_transfer_status.signatures = destination_response.signatures
+            return token_transfer_status
+        except Exception:
+            raise TransferInteractorError(
+                'unable to get token transfer status', request=request)
 
     def __compute_token_amount(self, request: TransferTokensRequest,
                                source_token_address: BlockchainAddress) -> int:
@@ -225,3 +299,25 @@ class TransferInteractor(Interactor):
                 recipient_address):
             raise TransferInteractorError('invalid recipient address',
                                           recipient_address=recipient_address)
+
+    def __create_token_transfer_status_response(
+            self,
+            transfer_status: ServiceNodeClient.TransferStatusResponse) \
+            -> TokenTransferStatus:
+        return TokenTransferStatus(
+            destination_blockchain=transfer_status.destination_blockchain,
+            source_transfer_status=transfer_status.status,
+            destination_transfer_status=DestinationTransferStatus.UNKNOWN,
+            sender_address=transfer_status.sender_address,
+            recipient_address=transfer_status.recipient_address,
+            source_token_address=transfer_status.source_token_address,
+            destination_token_address=transfer_status.
+            destination_token_address, amount=transfer_status.token_amount)
+
+    def __get_destination_transfer_status(
+            self, latest_block_number: int, transaction_block_number: int,
+            blockchain: Blockchain) -> DestinationTransferStatus:
+        confirmations = get_blockchain_config(blockchain)['confirmations']
+        if latest_block_number - transaction_block_number < confirmations:
+            return DestinationTransferStatus.SUBMITTED
+        return DestinationTransferStatus.CONFIRMED
