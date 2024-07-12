@@ -5,9 +5,9 @@ exposed to the users of the library.
 __all__ = [
     'Blockchain', 'BlockchainAddress', 'PantosClientError', 'PrivateKey',
     'ServiceNodeBid', 'TokenSymbol', 'ServiceNodeTaskInfo',
-    'decrypt_private_key', 'retrieve_service_node_bids',
-    'retrieve_token_balance', 'transfer_tokens',
-    'deploy_pantos_compatible_token'
+    'DestinationTransferStatus', 'decrypt_private_key',
+    'retrieve_service_node_bids', 'retrieve_token_balance', 'transfer_tokens',
+    'get_token_transfer_status', 'deploy_pantos_compatible_token'
 ]
 
 import typing as _typing
@@ -36,7 +36,9 @@ from pantos.client.library.business.transfers import \
     TransferInteractor as _TransferInteractor
 from pantos.client.library.constants import \
     TOKEN_SYMBOL_PAN as _TOKEN_SYMBOL_PAN
+from pantos.client.library.entitites import DestinationTransferStatus
 from pantos.client.library.entitites import ServiceNodeTaskInfo
+from pantos.client.library.entitites import TokenTransferStatus
 from pantos.client.library.exceptions import ClientError as _ClientError
 
 # Exception to be used by external client library users
@@ -195,6 +197,43 @@ def transfer_tokens(
         source_blockchain, destination_blockchain, sender_private_key,
         recipient_address, source_token_id, token_amount, service_node_bid)
     return _TransferInteractor().transfer_tokens(request)
+
+
+def get_token_transfer_status(
+        source_blockchain: Blockchain, service_node_address: BlockchainAddress,
+        service_node_task_id: _uuid.UUID,
+        blocks_to_search: int | None = None) -> TokenTransferStatus:
+    """Get the status of a token transfer process.
+
+    Parameters
+    ----------
+    source_blockchain : Blockchain
+        The source blockchain of the token transfer.
+    service_node_address : BlockchainAddress
+        The address of the service node that is handling the token
+        transfer.
+    service_node_task_id : uuid.UUID
+        The service node task ID of the token transfer.
+    blocks_to_search : int or None
+        The number of blocks to search for the destination transfer.
+        If None, the search is performed until the genesis block.
+
+    Returns
+    -------
+    TokenTransferStatus
+        The status of the token transfer transfer.
+
+    Raises
+    ------
+    PantosClientError
+        If the destination transfer cannot be found.
+
+    """
+    _initialize_library()
+    request = _TransferInteractor.TokenTransferStatusRequest(
+        source_blockchain, service_node_address, service_node_task_id,
+        blocks_to_search)
+    return _TransferInteractor().get_token_transfer_status(request)
 
 
 def deploy_pantos_compatible_token(
