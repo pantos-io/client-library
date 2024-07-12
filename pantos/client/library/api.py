@@ -4,8 +4,9 @@ exposed to the users of the library.
 """
 __all__ = [
     'Blockchain', 'BlockchainAddress', 'PantosClientError', 'PrivateKey',
-    'ServiceNodeBid', 'TokenSymbol', 'decrypt_private_key',
-    'retrieve_service_node_bids', 'retrieve_token_balance', 'transfer_tokens',
+    'ServiceNodeBid', 'TokenSymbol', 'ServiceNodeTaskInfo',
+    'decrypt_private_key', 'retrieve_service_node_bids',
+    'retrieve_token_balance', 'transfer_tokens',
     'deploy_pantos_compatible_token'
 ]
 
@@ -33,10 +34,9 @@ from pantos.client.library.business.tokens import \
     TokenInteractor as _TokenInteractor
 from pantos.client.library.business.transfers import \
     TransferInteractor as _TransferInteractor
-from pantos.client.library.business.transfers import \
-    TransferTokensResponse as _TransferTokensResponse
 from pantos.client.library.constants import \
     TOKEN_SYMBOL_PAN as _TOKEN_SYMBOL_PAN
+from pantos.client.library.entitites import ServiceNodeTaskInfo
 from pantos.client.library.exceptions import ClientError as _ClientError
 
 # Exception to be used by external client library users
@@ -150,7 +150,7 @@ def transfer_tokens(
         sender_private_key: PrivateKey, recipient_address: BlockchainAddress,
         source_token_id: _TokenId, token_amount: _Amount,
         service_node_bid: _typing.Optional[_BlockchainAddressBidPair] = None) \
-            -> _TransferTokensResponse:
+            -> ServiceNodeTaskInfo:
     """Transfer tokens from a sender's account on a source blockchain to
     a recipient's account on a (possibly different) destination blockchain.
 
@@ -181,8 +181,8 @@ def transfer_tokens(
 
     Returns
     -------
-    TransferTokensResponse
-        The response of the token transfer.
+    ServiceNodeTaskInfo
+        Service node-related information of a token transfer.
 
     Raises
     ------

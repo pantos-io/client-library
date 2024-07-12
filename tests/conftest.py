@@ -1,11 +1,15 @@
 """Shared fixtures for all pantos.client.library package tests.
 
 """
+import uuid
+
 import hexbytes
 import pytest
 from pantos.common.blockchains.base import Blockchain
 from pantos.common.entities import BlockchainAddress
 from pantos.common.entities import ServiceNodeBid
+from pantos.common.servicenodes import ServiceNodeClient
+from pantos.common.servicenodes import ServiceNodeTransferStatus
 from pantos.common.types import PrivateKey
 
 from pantos.client.library.blockchains.base import BlockchainClient
@@ -33,6 +37,8 @@ _AMOUNT = 100
 
 _NONCE = 11111
 
+_TASK_UUID = uuid.UUID('b6b59888-41c2-4555-825f-47ce387d6853')
+
 _SIGNER_ADDRESSES = [
     BlockchainAddress('0xBb608811Bfc5fc3444863BC589C7e5F50DF1936a')
 ]
@@ -42,6 +48,8 @@ _SIGNATURES = [
         '665b95365f0724784d5c2792ca870ff4bf08b06590ac068f6f89ae7edf640bdd3'
         'aaa116b69b2e0927a3151de498f5f0131beafbadb6c12c1756baa532d931fa81c')
 ]
+
+_SERVICE_NODE_URL = 'http://localhost:8080'
 
 _SERVICE_NODE_1 = BlockchainAddress(
     '0x5188287E724140aa3C432dCfE69E00992aF09d09')
@@ -71,6 +79,11 @@ _BIDS_2 = [
 
 
 @pytest.fixture(scope='module')
+def service_node_url():
+    return _SERVICE_NODE_URL
+
+
+@pytest.fixture(scope='module')
 def service_node_1():
     return _SERVICE_NODE_1
 
@@ -93,6 +106,11 @@ def bids_2():
 @pytest.fixture(scope='module')
 def token_address():
     return _TOKEN_ADDRESS
+
+
+@pytest.fixture(scope='module')
+def task_uuid(scope='module'):
+    return _TASK_UUID
 
 
 @pytest.fixture(scope='module')
@@ -211,3 +229,21 @@ def transfer_to_event(request):
             'signatures': _SIGNATURES
         }
     }
+
+
+@pytest.fixture(scope='function')
+def service_node_status(request):
+    return ServiceNodeClient.TransferStatusResponse(
+        _TASK_UUID, request.param[0], request.param[1], _SENDER, _RECIPIENT,
+        _SOURCE_TOKEN, _DESTINATION_TOKEN, _AMOUNT, _AMOUNT,
+        ServiceNodeTransferStatus.ACCEPTED, _SOURCE_TRANSFER_ID,
+        _TRANSACTION_HASH)
+
+
+@pytest.fixture(scope='function')
+def destination_transfer_response():
+    return BlockchainClient.DestinationTransferResponse(
+        _BLOCK_NUMBER + 100, _BLOCK_NUMBER, _TRANSACTION_HASH,
+        _SOURCE_TRANSFER_ID, _DESTINATION_TRANSFER_ID, _SENDER, _RECIPIENT,
+        _SOURCE_TOKEN, _DESTINATION_TOKEN, _AMOUNT, _NONCE, _SIGNER_ADDRESSES,
+        _SIGNATURES)
