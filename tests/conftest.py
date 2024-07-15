@@ -109,12 +109,12 @@ def token_address():
 
 
 @pytest.fixture(scope='module')
-def task_uuid(scope='module'):
+def task_uuid():
     return _TASK_UUID
 
 
 @pytest.fixture(scope='module')
-def config(scope='module'):
+def config():
     return {
         'hub': '0x308eF9f94a642A31D9F9eA83f183544027A9742D',
         'forwarder': '0x308eF9f94a642A31D9F9eA83f183544027A9742D',
