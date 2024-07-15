@@ -5,7 +5,7 @@ exposed to the users of the library.
 __all__ = [
     'Blockchain', 'BlockchainAddress', 'PantosClientError', 'PrivateKey',
     'ServiceNodeBid', 'TokenSymbol', 'ServiceNodeTaskInfo',
-    'DestinationTransferStatus', 'decrypt_private_key',
+    'DestinationTransferStatus', 'TokenTransferStatus', 'decrypt_private_key',
     'retrieve_service_node_bids', 'retrieve_token_balance', 'transfer_tokens',
     'get_token_transfer_status', 'deploy_pantos_compatible_token'
 ]
