@@ -8,6 +8,10 @@ readme = "README.md"
 packages = [
     { include = "pantos"}
 ]
+include = [
+    "pantos/client-library.yml",
+    "pantos/client-library.env"
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
