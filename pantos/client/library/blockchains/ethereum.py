@@ -4,23 +4,117 @@
 import secrets
 import typing
 
-import eth_account.messages
-import hexbytes
 import web3
 import web3.contract
 import web3.types
 from pantos.common.blockchains.base import Blockchain
 from pantos.common.blockchains.base import NodeConnections
+from pantos.common.blockchains.base import VersionedContractAbi
 from pantos.common.blockchains.enums import ContractAbi
 from pantos.common.blockchains.ethereum import EthereumUtilities
 from pantos.common.types import BlockchainAddress
-from pantos.common.types import PrivateKey
 
-from pantos.client.library.blockchains.base import VERSIONED_CONTRACT_ABIS
 from pantos.client.library.blockchains.base import BlockchainClient
 from pantos.client.library.blockchains.base import BlockchainClientError
 from pantos.client.library.blockchains.base import UnknownTransferError
 from pantos.client.library.constants import TOKEN_SYMBOL_PAN
+
+_EIP712_DOMAIN_NAME = 'Pantos'
+_EIP712_DOMAIN_SALT = b''
+
+_TRANSFER_MESSAGE_TYPES = {
+    'TransferRequest': [{
+        'name': 'sender',
+        'type': 'address'
+    }, {
+        'name': 'recipient',
+        'type': 'address'
+    }, {
+        'name': 'token',
+        'type': 'address'
+    }, {
+        'name': 'amount',
+        'type': 'uint256'
+    }, {
+        'name': 'serviceNode',
+        'type': 'address'
+    }, {
+        'name': 'fee',
+        'type': 'uint256'
+    }, {
+        'name': 'nonce',
+        'type': 'uint256'
+    }, {
+        'name': 'validUntil',
+        'type': 'uint256'
+    }],
+    'Transfer': [{
+        'name': 'request',
+        'type': 'TransferRequest'
+    }, {
+        'name': 'blockchainId',
+        'type': 'uint256'
+    }, {
+        'name': 'pantosHub',
+        'type': 'address'
+    }, {
+        'name': 'pantosForwarder',
+        'type': 'address'
+    }, {
+        'name': 'pantosToken',
+        'type': 'address'
+    }]
+}
+
+_TRANSFER_FROM_MESSAGE_TYPES = {
+    'TransferFromRequest': [{
+        'name': 'destinationBlockchainId',
+        'type': 'uint256'
+    }, {
+        'name': 'sender',
+        'type': 'address'
+    }, {
+        'name': 'recipient',
+        'type': 'string'
+    }, {
+        'name': 'sourceToken',
+        'type': 'address'
+    }, {
+        'name': 'destinationToken',
+        'type': 'string'
+    }, {
+        'name': 'amount',
+        'type': 'uint256'
+    }, {
+        'name': 'serviceNode',
+        'type': 'address'
+    }, {
+        'name': 'fee',
+        'type': 'uint256'
+    }, {
+        'name': 'nonce',
+        'type': 'uint256'
+    }, {
+        'name': 'validUntil',
+        'type': 'uint256'
+    }],
+    'TransferFrom': [{
+        'name': 'request',
+        'type': 'TransferFromRequest'
+    }, {
+        'name': 'sourceBlockchainId',
+        'type': 'uint256'
+    }, {
+        'name': 'pantosHub',
+        'type': 'address'
+    }, {
+        'name': 'pantosForwarder',
+        'type': 'address'
+    }, {
+        'name': 'pantosToken',
+        'type': 'address'
+    }]
+}
 
 Web3Contract: typing.TypeAlias = NodeConnections.Wrapper[
     web3.contract.Contract]
@@ -37,35 +131,24 @@ class EthereumClient(BlockchainClient):
     """Ethereum-specific blockchain client.
 
     """
-
     def compute_transfer_signature(
             self, request: BlockchainClient.ComputeTransferSignatureRequest) \
             -> BlockchainClient.ComputeTransferSignatureResponse:
         # Docstring inherited
         try:
-            blockchain_id = self.get_blockchain().value
             sender_address = self._account_id_to_account_address(
                 request.sender_private_key)
-            hub_address = self._get_config()['hub']
-            forwarder_address = self._get_config()['forwarder']
-            pan_token_address = self._get_config()['tokens'][TOKEN_SYMBOL_PAN]
             node_connections = self._get_utilities().create_node_connections()
             hub_contract = self._create_hub_contract(node_connections)
             sender_nonce = self.__generate_sender_nonce(
                 hub_contract, sender_address)
-            base_message = web3.Web3.solidity_keccak([
-                'uint256', 'address', 'address', 'address', 'uint256',
-                'address', 'uint256', 'uint256', 'uint256', 'address',
-                'address', 'address'
-            ], [
-                blockchain_id, sender_address, request.recipient_address,
-                request.token_address, request.token_amount,
-                request.service_node_address, request.service_node_bid.fee,
-                sender_nonce, request.valid_until, hub_address,
-                forwarder_address, pan_token_address
-            ])
-            signature = self.__sign_message(request.sender_private_key,
-                                            base_message)
+            domain_data = self.__get_eip712_domain_data()
+            message_data = self.__get_transfer_message_data(
+                request, sender_address, sender_nonce)
+            signed_message = web3.Account.sign_typed_data(
+                request.sender_private_key, domain_data,
+                _TRANSFER_MESSAGE_TYPES, message_data)
+            signature = signed_message.signature.to_0x_hex()
             return BlockchainClient.ComputeTransferSignatureResponse(
                 sender_address, sender_nonce, signature)
         except Exception:
@@ -79,32 +162,19 @@ class EthereumClient(BlockchainClient):
             -> BlockchainClient.ComputeTransferFromSignatureResponse:
         # Docstring inherited
         try:
-            source_blockchain_id = self.get_blockchain().value
-            destination_blockchain_id = request.destination_blockchain.value
             sender_address = self._account_id_to_account_address(
                 request.sender_private_key)
-            hub_address = self._get_config()['hub']
-            forwarder_address = self._get_config()['forwarder']
-            pan_token_address = self._get_config()['tokens'][TOKEN_SYMBOL_PAN]
             node_connections = self._get_utilities().create_node_connections()
             hub_contract = self._create_hub_contract(node_connections)
             sender_nonce = self.__generate_sender_nonce(
                 hub_contract, sender_address)
-            base_message = web3.Web3.solidity_keccak([
-                'uint256', 'uint256', 'address', 'string', 'address', 'string',
-                'uint256', 'address', 'uint256', 'uint256', 'uint256',
-                'address', 'address', 'address'
-            ], [
-                source_blockchain_id, destination_blockchain_id,
-                sender_address, request.recipient_address,
-                request.source_token_address,
-                request.destination_token_address, request.token_amount,
-                request.service_node_address, request.service_node_bid.fee,
-                sender_nonce, request.valid_until, hub_address,
-                forwarder_address, pan_token_address
-            ])
-            signature = self.__sign_message(request.sender_private_key,
-                                            base_message)
+            domain_data = self.__get_eip712_domain_data()
+            message_data = self.__get_transfer_from_message_data(
+                request, sender_address, sender_nonce)
+            signed_message = web3.Account.sign_typed_data(
+                request.sender_private_key, domain_data,
+                _TRANSFER_FROM_MESSAGE_TYPES, message_data)
+            signature = signed_message.signature.to_0x_hex()
             return BlockchainClient.ComputeTransferFromSignatureResponse(
                 sender_address, sender_nonce, signature)
         except Exception:
@@ -156,13 +226,13 @@ class EthereumClient(BlockchainClient):
                 token_address=token_address,
                 destination_blockchain=destination_blockchain)
 
-    def read_service_node_addresses(self) -> typing.List[BlockchainAddress]:
+    def read_service_node_addresses(self) -> list[BlockchainAddress]:
         # Docstring inherited
         try:
             node_connections = self._get_utilities().create_node_connections()
             hub_contract = self._create_hub_contract(node_connections)
-            service_node_addresses = hub_contract.caller().getServiceNodes(
-            ).get()
+            service_node_addresses = \
+                hub_contract.caller().getServiceNodes().get()
             return [
                 BlockchainAddress(service_node_address)
                 for service_node_address in sorted(service_node_addresses)
@@ -179,7 +249,7 @@ class EthereumClient(BlockchainClient):
             hub_contract = self._create_hub_contract(node_connections)
             service_node_record = hub_contract.caller().getServiceNodeRecord(
                 service_node_address).get()
-            assert len(service_node_record) == 6
+            assert len(service_node_record) == 5
             service_node_active = service_node_record[0]
             if not service_node_active:
                 raise self._create_error(
@@ -208,7 +278,7 @@ class EthereumClient(BlockchainClient):
             hub_contract = self._create_hub_contract(node_connections)
             transfer_event = typing.cast(
                 NodeConnections.Wrapper[web3.contract.contract.ContractEvent],
-                hub_contract.events.TransferTo())
+                hub_contract.events.TransferToSucceeded())
             for to_block_number_ in range(to_block_number + 1,
                                           from_block_number,
                                           -blocks_per_query):
@@ -246,8 +316,8 @@ class EthereumClient(BlockchainClient):
         try:
             return self._get_utilities().create_contract(
                 self._get_config()['hub'],
-                VERSIONED_CONTRACT_ABIS[ContractAbi.PANTOS_HUB],
-                node_connections)
+                VersionedContractAbi(ContractAbi.PANTOS_HUB,
+                                     self.protocol_version), node_connections)
         except Exception:
             raise self._create_error(
                 'unable to create a hub contract instance')
@@ -258,8 +328,8 @@ class EthereumClient(BlockchainClient):
         try:
             return self._get_utilities().create_contract(
                 token_address,
-                VERSIONED_CONTRACT_ABIS[ContractAbi.PANTOS_TOKEN],
-                node_connections)
+                VersionedContractAbi(ContractAbi.PANTOS_TOKEN,
+                                     self.protocol_version), node_connections)
         except Exception:
             raise self._create_error(
                 'unable to create a token contract instance')
@@ -276,12 +346,60 @@ class EthereumClient(BlockchainClient):
                     sender_address, sender_nonce).get():
                 return sender_nonce
 
-    def __sign_message(self, private_key: PrivateKey,
-                       base_message: hexbytes.HexBytes) -> str:
-        message = eth_account.messages.encode_defunct(base_message)
-        signed_message = web3.Account.sign_message(message,
-                                                   private_key=private_key)
-        return signed_message.signature.to_0x_hex()
+    def __get_eip712_domain_data(self) -> dict[str, typing.Any]:
+        return {
+            'name': _EIP712_DOMAIN_NAME,
+            'version': str(self.protocol_version.major),
+            'chainId': self._get_config()['chain_id'],
+            'verifyingContract': self._get_config()['forwarder'],
+            'salt': _EIP712_DOMAIN_SALT
+        }
+
+    def __get_transfer_message_data(
+            self, request: BlockchainClient.ComputeTransferSignatureRequest,
+            sender_address: BlockchainAddress,
+            sender_nonce: int) -> dict[str, typing.Any]:
+        return {
+            'request': {
+                'sender': sender_address,
+                'recipient': request.recipient_address,
+                'token': request.token_address,
+                'amount': request.token_amount,
+                'serviceNode': request.service_node_address,
+                'fee': request.service_node_bid.fee,
+                'nonce': sender_nonce,
+                'validUntil': request.valid_until
+            },
+            'blockchainId': self.get_blockchain().value,
+            'pantosHub': self._get_config()['hub'],
+            'pantosForwarder': self._get_config()['forwarder'],
+            'pantosToken': self._get_config()['tokens'][TOKEN_SYMBOL_PAN]
+        }
+
+    def __get_transfer_from_message_data(
+            self,
+            request: BlockchainClient.ComputeTransferFromSignatureRequest,
+            sender_address: BlockchainAddress,
+            sender_nonce: int) -> dict[str, typing.Any]:
+        return {
+            'request': {
+                'destinationBlockchainId': request.destination_blockchain.
+                value,
+                'sender': sender_address,
+                'recipient': request.recipient_address,
+                'sourceToken': request.source_token_address,
+                'destinationToken': request.destination_token_address,
+                'amount': request.token_amount,
+                'serviceNode': request.service_node_address,
+                'fee': request.service_node_bid.fee,
+                'nonce': sender_nonce,
+                'validUntil': request.valid_until
+            },
+            'sourceBlockchainId': self.get_blockchain().value,
+            'pantosHub': self._get_config()['hub'],
+            'pantosForwarder': self._get_config()['forwarder'],
+            'pantosToken': self._get_config()['tokens'][TOKEN_SYMBOL_PAN]
+        }
 
     def __find_destination_transfer(
             self, transfer_event_logs: list[web3.types.EventData],
@@ -290,25 +408,27 @@ class EthereumClient(BlockchainClient):
             -> BlockchainClient.DestinationTransferResponse | None:
         for transfer_event_log in transfer_event_logs:
             transfer_event_args = transfer_event_log['args']
-            if (transfer_event_args['sourceTransactionId']
+            transfer_event_request = transfer_event_args['request']
+            if (transfer_event_request['sourceTransactionId']
                     == source_transaction_id
-                    and transfer_event_args['sourceBlockchainId']
+                    and transfer_event_request['sourceBlockchainId']
                     == source_blockchain_id):
                 return BlockchainClient.DestinationTransferResponse(
                     to_block_number, transfer_event_log['blockNumber'],
-                    transfer_event_log['transactionHash'].hex(),
-                    transfer_event_args['sourceTransferId'],
+                    transfer_event_log['transactionHash'].to_0x_hex(),
+                    transfer_event_request['sourceTransferId'],
                     transfer_event_args['destinationTransferId'],
-                    BlockchainAddress(transfer_event_args['sender']),
-                    BlockchainAddress(transfer_event_args['recipient']),
-                    BlockchainAddress(transfer_event_args['sourceToken']),
-                    BlockchainAddress(transfer_event_args['destinationToken']),
-                    transfer_event_args['amount'],
-                    transfer_event_args['nonce'], [
+                    BlockchainAddress(transfer_event_request['sender']),
+                    BlockchainAddress(transfer_event_request['recipient']),
+                    BlockchainAddress(transfer_event_request['sourceToken']),
+                    BlockchainAddress(
+                        transfer_event_request['destinationToken']),
+                    transfer_event_request['amount'],
+                    transfer_event_request['nonce'], [
                         BlockchainAddress(signer_address) for signer_address in
                         transfer_event_args['signerAddresses']
                     ], [
-                        signature.hex()
+                        signature.to_0x_hex()
                         for signature in transfer_event_args['signatures']
                     ])
         return None
