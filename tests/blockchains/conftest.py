@@ -4,7 +4,7 @@ from pantos.client.library.blockchains.base import BlockchainClient
 from pantos.client.library.constants import TOKEN_SYMBOL_PAN
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='package')
 def blockchain_config(chain_id, hub_address, forwarder_address,
                       pan_token_address):
     return {
