@@ -10,7 +10,6 @@ __all__ = [
     'get_token_transfer_status', 'deploy_pantos_compatible_token'
 ]
 
-import typing as _typing
 import uuid as _uuid
 
 from pantos.common.blockchains.base import Blockchain
@@ -69,15 +68,15 @@ def decrypt_private_key(blockchain: Blockchain, keystore: str,
         If the private key cannot be loaded from the keystore file.
 
     """
-    _initialize_library()
+    _initialize_library(False)
     return _get_blockchain_client(blockchain).decrypt_private_key(
         keystore, password)
 
 
 def retrieve_service_node_bids(
         source_blockchain: Blockchain, destination_blockchain: Blockchain,
-        return_fee_in_main_unit: bool = True) \
-            -> _typing.Dict[BlockchainAddress, _typing.List[ServiceNodeBid]]:
+        return_fee_in_main_unit: bool = True, *, mainnet: bool = False) \
+        -> dict[BlockchainAddress, list[ServiceNodeBid]]:
     """Retrieve the service node bids for token transfers from a
     specified source blockchain to a specified destination blockchain.
 
@@ -87,10 +86,13 @@ def retrieve_service_node_bids(
         The source blockchain of the service node bids.
     destination_blockchain : Blockchain
         The destination blockchain of the service node bids.
-    return_fee_in_main_unit : bool
+    return_fee_in_main_unit : bool, optional
         True if the service node bids' fee is to be returned in the
         Pantos Token's main unit, False if it is to be returned in the
         Pantos Token's smallest subunit (default: True).
+    mainnet : bool, optional
+        If True, the function is executed on mainnet. Otherwise, it is
+        executed on testnet (default: testnet).
 
     Returns
     -------
@@ -104,14 +106,15 @@ def retrieve_service_node_bids(
         If the service node bids cannot be retrieved.
 
     """
-    _initialize_library()
+    _initialize_library(mainnet)
     return _BidInteractor().retrieve_service_node_bids(
         source_blockchain, destination_blockchain, return_fee_in_main_unit)
 
 
 def retrieve_token_balance(blockchain: Blockchain, account_id: _AccountId,
                            token_id: _TokenId = _TOKEN_SYMBOL_PAN,
-                           return_in_main_unit: bool = True) -> _Amount:
+                           return_in_main_unit: bool = True, *,
+                           mainnet: bool = False) -> _Amount:
     """Retrieve the token balance of a blockchain account.
 
     Parameters
@@ -123,10 +126,13 @@ def retrieve_token_balance(blockchain: Blockchain, account_id: _AccountId,
         account.
     token_id : BlockchainAddress or TokenSymbol
         The address or symbol of the token (default: PAN).
-    return_in_main_unit : bool
+    return_in_main_unit : bool, optional
         True if the token balance is to be returned in the token's main
         unit, False if it is to be returned in the token's smallest
         subunit (default: True).
+    mainnet : bool, optional
+        If True, the function is executed on mainnet. Otherwise, it is
+        executed on testnet (default: testnet).
 
     Returns
     -------
@@ -141,18 +147,19 @@ def retrieve_token_balance(blockchain: Blockchain, account_id: _AccountId,
         If the token balance cannot be retrieved.
 
     """
-    _initialize_library()
+    _initialize_library(mainnet)
     request = _TokenInteractor.RetrieveTokenBalanceRequest(
         blockchain, token_id, account_id, return_in_main_unit)
     return _TokenInteractor().retrieve_token_balance(request)
 
 
-def transfer_tokens(
-        source_blockchain: Blockchain, destination_blockchain: Blockchain,
-        sender_private_key: PrivateKey, recipient_address: BlockchainAddress,
-        source_token_id: _TokenId, token_amount: _Amount,
-        service_node_bid: _typing.Optional[_BlockchainAddressBidPair] = None) \
-            -> ServiceNodeTaskInfo:
+def transfer_tokens(source_blockchain: Blockchain,
+                    destination_blockchain: Blockchain,
+                    sender_private_key: PrivateKey,
+                    recipient_address: BlockchainAddress,
+                    source_token_id: _TokenId, token_amount: _Amount,
+                    service_node_bid: _BlockchainAddressBidPair | None = None,
+                    *, mainnet: bool = False) -> ServiceNodeTaskInfo:
     """Transfer tokens from a sender's account on a source blockchain to
     a recipient's account on a (possibly different) destination blockchain.
 
@@ -180,6 +187,9 @@ def transfer_tokens(
         service node's chosen bid. If none is specified,
         the registered service node bid with the lowest
         fee for the token transfer is automatically chosen.
+    mainnet : bool, optional
+        If True, the function is executed on mainnet. Otherwise, it is
+        executed on testnet (default: testnet).
 
     Returns
     -------
@@ -192,17 +202,18 @@ def transfer_tokens(
         If the token transfer cannot be executed.
 
     """
-    _initialize_library()
+    _initialize_library(mainnet)
     request = _TransferInteractor.TransferTokensRequest(
         source_blockchain, destination_blockchain, sender_private_key,
         recipient_address, source_token_id, token_amount, service_node_bid)
     return _TransferInteractor().transfer_tokens(request)
 
 
-def get_token_transfer_status(
-        source_blockchain: Blockchain, service_node_address: BlockchainAddress,
-        service_node_task_id: _uuid.UUID,
-        blocks_to_search: int | None = None) -> TokenTransferStatus:
+def get_token_transfer_status(source_blockchain: Blockchain,
+                              service_node_address: BlockchainAddress,
+                              service_node_task_id: _uuid.UUID,
+                              blocks_to_search: int | None = None, *,
+                              mainnet: bool = False) -> TokenTransferStatus:
     """Get the status of a token transfer process.
 
     Parameters
@@ -217,6 +228,9 @@ def get_token_transfer_status(
     blocks_to_search : int or None
         The number of blocks to search for the destination transfer.
         If None, the search is performed until the genesis block.
+    mainnet : bool, optional
+        If True, the function is executed on mainnet. Otherwise, it is
+        executed on testnet (default: testnet).
 
     Returns
     -------
@@ -229,21 +243,21 @@ def get_token_transfer_status(
         If the destination transfer cannot be found.
 
     """
-    _initialize_library()
+    _initialize_library(mainnet)
     request = _TransferInteractor.TokenTransferStatusRequest(
         source_blockchain, service_node_address, service_node_task_id,
         blocks_to_search)
     return _TransferInteractor().get_token_transfer_status(request)
 
 
-def deploy_pantos_compatible_token(
-        token_name: str, token_symbol: str, token_decimals: int,
-        token_pausable: bool, token_burnable: bool, token_supply: int,
-        deployment_blockchains: _typing.List[Blockchain],
-        payment_blockchain: Blockchain,
-        payer_private_key: PrivateKey) -> _uuid.UUID:
-    """Deploy a pantos compatible blockchain on all the
-    deployment_blockchains.
+def deploy_pantos_compatible_token(token_name: str, token_symbol: str,
+                                   token_decimals: int, token_pausable: bool,
+                                   token_burnable: bool, token_supply: int,
+                                   deployment_blockchains: list[Blockchain],
+                                   payment_blockchain: Blockchain,
+                                   payer_private_key: PrivateKey, *,
+                                   mainnet: bool = False) -> _uuid.UUID:
+    """Deploy a Pantos-compatible token on the given blockchains.
 
     Parameters
     ----------
@@ -266,6 +280,9 @@ def deploy_pantos_compatible_token(
     payer_private_key : PrivateKey
         The unencrypted private key of the payer's account on the
         payment_blockchain.
+    mainnet : bool, optional
+        If True, the function is executed on mainnet. Otherwise, it is
+        executed on testnet (default: testnet).
 
     Returns
     -------
@@ -278,7 +295,7 @@ def deploy_pantos_compatible_token(
         If the deployment process cannot be executed.
 
     """
-    _initialize_library()
+    _initialize_library(mainnet)
     request = _TokenDeploymentInteractor.TokenDeploymentRequest(
         token_name, token_symbol, token_decimals, token_pausable,
         token_burnable, token_supply, deployment_blockchains,

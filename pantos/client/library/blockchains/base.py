@@ -10,8 +10,6 @@ from pantos.common.blockchains.base import Blockchain
 from pantos.common.blockchains.base import BlockchainHandler
 from pantos.common.blockchains.base import BlockchainUtilities
 from pantos.common.blockchains.base import BlockchainUtilitiesError
-from pantos.common.blockchains.base import VersionedContractAbi
-from pantos.common.blockchains.enums import ContractAbi
 from pantos.common.blockchains.factory import get_blockchain_utilities
 from pantos.common.blockchains.factory import initialize_blockchain_utilities
 from pantos.common.entities import ServiceNodeBid
@@ -22,13 +20,7 @@ from pantos.common.types import PrivateKey
 
 from pantos.client.library.configuration import get_blockchain_config
 from pantos.client.library.exceptions import ClientLibraryError
-
-_CONTRACTS_VERSION = semantic_version.Version('1.0.0')
-
-VERSIONED_CONTRACT_ABIS = {
-    contract_abi: VersionedContractAbi(contract_abi, _CONTRACTS_VERSION)
-    for contract_abi in ContractAbi
-}
+from pantos.client.library.protocol import is_supported_protocol_version
 
 
 class BlockchainClientError(ClientLibraryError):
@@ -50,9 +42,21 @@ class UnknownTransferError(BlockchainClientError):
 class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
     """Base class for all blockchain clients.
 
+    Attributes
+    ----------
+    protocol_version : semantic_version.Version
+        The version of the Pantos protocol that the blockchain client
+        instance is compliant with.
+
     """
-    def __init__(self):
+    def __init__(self, protocol_version: semantic_version.Version):
         """Construct a blockchain client instance.
+
+        Parameters
+        ----------
+        protocol_version : semantic_version.Version
+            The version of the Pantos protocol that the blockchain
+            client instance must comply with.
 
         Raises
         ------
@@ -64,14 +68,16 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
         """
         if not self._get_config()['active']:
             raise self._create_error('blockchain is not active')
+        assert is_supported_protocol_version(protocol_version)
+        self.protocol_version: typing.Final[
+            semantic_version.Version] = protocol_version
         blockchain_node_url = self._get_config()['provider']
         fallback_blockchain_nodes_urls = self._get_config().get(
             'fallback_providers', [])
         average_block_time = self._get_config()['average_block_time']
-        required_transaction_confirmations = self._get_config(
-        )['confirmations']
+        required_transaction_confirmations = \
+            self._get_config()['confirmations']
         transaction_network_id = self._get_config().get('chain_id')
-
         try:
             initialize_blockchain_utilities(
                 self.get_blockchain(), [blockchain_node_url],
@@ -213,7 +219,7 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
     @abc.abstractmethod
     def compute_transfer_signature(
             self, request: ComputeTransferSignatureRequest) \
-            -> ComputeTransferSignatureResponse:  # pragma: no cover
+            -> ComputeTransferSignatureResponse:
         """Compute the sender's signature for a single-chain token
         transfer.
 
@@ -233,7 +239,7 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
             If the signature for the token transfer cannot be computed.
 
         """
-        pass
+        pass  # pragma: no cover
 
     @dataclasses.dataclass
     class ComputeTransferFromSignatureRequest:
@@ -301,7 +307,7 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
     @abc.abstractmethod
     def compute_transfer_from_signature(
             self, request: ComputeTransferFromSignatureRequest) \
-            -> ComputeTransferFromSignatureResponse:  # pragma: no cover
+            -> ComputeTransferFromSignatureResponse:
         """Compute the sender's signature for a cross-chain token
         transfer.
 
@@ -321,11 +327,10 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
             If the signature for the token transfer cannot be computed.
 
         """
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
-    def is_valid_recipient_address(
-            self, recipient_address: str) -> bool:  # pragma: no cover
+    def is_valid_recipient_address(self, recipient_address: str) -> bool:
         """Determine if an address string is a valid recipient address
         on the blockchain.
 
@@ -341,7 +346,7 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
             address on the blockchain.
 
         """
-        pass
+        pass  # pragma: no cover
 
     def decrypt_private_key(self, keystore: str, password: str) -> PrivateKey:
         """Decrypt the private key from a password-encrypted keystore.
@@ -375,8 +380,7 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
     @abc.abstractmethod
     def read_external_token_address(
             self, token_address: BlockchainAddress,
-            destination_blockchain: Blockchain) \
-            -> BlockchainAddress:  # pragma: no cover
+            destination_blockchain: Blockchain) -> BlockchainAddress:
         """Read an external token address that is registered at the
         Pantos Hub on the blockchain.
 
@@ -399,11 +403,10 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
             active.
 
         """
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
-    def read_service_node_addresses(
-            self) -> typing.List[BlockchainAddress]:  # pragma: no cover
+    def read_service_node_addresses(self) -> list[BlockchainAddress]:
         """Read the blockchain addresses of the active service nodes
         registered at the Pantos Hub on the blockchain.
 
@@ -419,12 +422,11 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
             cannot be read.
 
         """
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
-    def read_service_node_url(
-            self, service_node_address: BlockchainAddress) \
-            -> str:  # pragma: no cover
+    def read_service_node_url(self,
+                              service_node_address: BlockchainAddress) -> str:
         """Read a service node's URL that is registered at the Pantos
         Hub on the blockchain.
 
@@ -445,12 +447,12 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
             the service node is not active.
 
         """
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def read_destination_transfer(
             self, request: DestinationTransferRequest) \
-            -> DestinationTransferResponse:  # pragma: no cover
+            -> DestinationTransferResponse:
         """Read a token transfer on the destination blockchain.
 
         Parameters
@@ -471,7 +473,7 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
             If the token transfer cannot be read.
 
         """
-        pass
+        pass  # pragma: no cover
 
     def read_token_balance(self, token_address: BlockchainAddress,
                            account_id: AccountId) -> int:
@@ -507,8 +509,7 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
                 token_address=token_address, account_id=account_id)
 
     @abc.abstractmethod
-    def read_token_decimals(
-            self, token_address: BlockchainAddress) -> int:  # pragma: no cover
+    def read_token_decimals(self, token_address: BlockchainAddress) -> int:
         """Read the number of decimals of a Pantos-compatible token.
 
         Parameters
@@ -527,7 +528,7 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
             If the token's number of decimals cannot be read.
 
         """
-        pass
+        pass  # pragma: no cover
 
     def _create_unknown_transfer_error(
             self, **kwargs: typing.Any) -> BlockchainClientError:
@@ -540,7 +541,7 @@ class BlockchainClient(BlockchainHandler, ErrorCreator[BlockchainClientError]):
             return account_id
         return BlockchainAddress(self._get_utilities().get_address(account_id))
 
-    def _get_config(self) -> typing.Dict[str, typing.Any]:
+    def _get_config(self) -> dict[str, typing.Any]:
         return get_blockchain_config(self.get_blockchain())
 
     def _get_utilities(self) -> BlockchainUtilities:

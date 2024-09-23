@@ -73,6 +73,22 @@ _VALIDATION_SCHEMA_BLOCKCHAIN = {
 """Schema for validating a blockchain entry in the configuration file."""
 
 _VALIDATION_SCHEMA = {
+    'protocol': {
+        'type': 'dict',
+        'required': True,
+        'schema': {
+            'mainnet': {
+                'type': 'string',
+                'required': True,
+                'regex': r'^[0-9]+\.[0-9]+\.[0-9]+$'
+            },
+            'testnet': {
+                'type': 'string',
+                'required': True,
+                'regex': r'^[0-9]+\.[0-9]+\.[0-9]+$'
+            }
+        }
+    },
     'token_creator': {
         'type': 'dict',
         'schema': {

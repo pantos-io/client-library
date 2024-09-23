@@ -61,8 +61,19 @@ test:
 coverage:
 	poetry run python3 -m pytest --cov-report term-missing --cov=pantos tests
 
+.PHONY: local-common
+local-common:
+ifndef DEV_PANTOS_COMMON
+	$(error Please define DEV_PANTOS_COMMON variable)
+endif
+	$(eval CURRENT_COMMON := $(shell echo .venv/lib/python3.*/site-packages/pantos/common))
+	@if [ -d "$(CURRENT_COMMON)" ]; then \
+		rm -rf "$(CURRENT_COMMON)"; \
+		ln -s "$(DEV_PANTOS_COMMON)" "$(CURRENT_COMMON)"; \
+	else \
+		echo "Directory $(CURRENT_COMMON) does not exist"; \
+	fi
+
 .PHONY: clean
 clean:
-	rm -r -f build/
 	rm -r -f dist/
-	rm -r -f pantos_common.egg-info/

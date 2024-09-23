@@ -33,8 +33,8 @@ def test_convert_amount_to_main_unit_correct_zero_subunit():
     return_value=MockedBlockchainClient(8))
 def test_convert_amount_to_main_unit_correct_non_zero_subunit(
         mocked_blockchain_client, mocked_token_id_to_token_address,
-        token_address):
-    mocked_token_id_to_token_address.return_value = token_address
+        source_token_address):
+    mocked_token_id_to_token_address.return_value = source_token_address
     assert TokenInteractor().convert_amount_to_main_unit(
         Blockchain.ETHEREUM, 2, 800000000) == 8
 
@@ -46,8 +46,8 @@ def test_convert_amount_to_main_unit_correct_non_zero_subunit(
     return_value=MockedBlockchainClient(-1))
 def test_convert_amount_to_main_unit_error(mocked_blockchain_client,
                                            mocked_token_id_to_token_address,
-                                           token_address):
-    mocked_token_id_to_token_address.return_value = token_address
+                                           source_token_address):
+    mocked_token_id_to_token_address.return_value = source_token_address
     with pytest.raises(Exception):
         TokenInteractor().convert_amount_to_main_unit(Blockchain.ETHEREUM, 2,
                                                       800000000)
@@ -70,7 +70,7 @@ def test_convert_amount_to_subunit_correct_zero():
     return_value=MockedBlockchainClient(8))
 def test_convert_amount_to_subunit_correct_non_zero(
         mocked_blockchain_client, mocked_token_id_to_token_address,
-        token_address):
-    mocked_token_id_to_token_address.return_value = token_address
+        source_token_address):
+    mocked_token_id_to_token_address.return_value = source_token_address
     assert TokenInteractor().convert_amount_to_subunit(Blockchain.ETHEREUM, 2,
                                                        8) == 800000000
