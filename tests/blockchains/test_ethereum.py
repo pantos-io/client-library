@@ -7,7 +7,6 @@ from pantos.common.blockchains.base import BlockchainUtilitiesError
 from pantos.common.blockchains.enums import Blockchain
 
 from pantos.client.library.blockchains.ethereum import _EIP712_DOMAIN_NAME
-from pantos.client.library.blockchains.ethereum import _EIP712_DOMAIN_SALT
 from pantos.client.library.blockchains.ethereum import \
     _TRANSFER_FROM_MESSAGE_TYPES
 from pantos.client.library.blockchains.ethereum import _TRANSFER_MESSAGE_TYPES
@@ -30,8 +29,7 @@ def eip712_domain_data(protocol_version, chain_id, forwarder_address):
         'name': _EIP712_DOMAIN_NAME,
         'version': str(protocol_version.major),
         'chainId': chain_id,
-        'verifyingContract': forwarder_address,
-        'salt': _EIP712_DOMAIN_SALT
+        'verifyingContract': forwarder_address
     }
 
 
