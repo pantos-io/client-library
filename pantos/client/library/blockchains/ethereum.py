@@ -20,7 +20,6 @@ from pantos.client.library.blockchains.base import UnknownTransferError
 from pantos.client.library.constants import TOKEN_SYMBOL_PAN
 
 _EIP712_DOMAIN_NAME = 'Pantos'
-_EIP712_DOMAIN_SALT = b''
 
 _TRANSFER_MESSAGE_TYPES = {
     'TransferRequest': [{
@@ -351,8 +350,7 @@ class EthereumClient(BlockchainClient):
             'name': _EIP712_DOMAIN_NAME,
             'version': str(self.protocol_version.major),
             'chainId': self._get_config()['chain_id'],
-            'verifyingContract': self._get_config()['forwarder'],
-            'salt': _EIP712_DOMAIN_SALT
+            'verifyingContract': self._get_config()['forwarder']
         }
 
     def __get_transfer_message_data(
