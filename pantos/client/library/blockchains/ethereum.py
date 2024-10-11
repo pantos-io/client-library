@@ -426,7 +426,7 @@ class EthereumClient(BlockchainClient):
                         BlockchainAddress(signer_address) for signer_address in
                         transfer_event_args['signerAddresses']
                     ], [
-                        signature.to_0x_hex()
+                        f"0x{signature.hex()}"
                         for signature in transfer_event_args['signatures']
                     ])
         return None
