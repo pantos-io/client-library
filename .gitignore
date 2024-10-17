@@ -9,5 +9,4 @@
 *.keystore
 build/
 dist/
-find.sh
-local/
+/local/
