@@ -11,9 +11,9 @@ from pantos.client.library.blockchains.cronos import CronosClient
 from pantos.client.library.blockchains.ethereum import EthereumClient
 from pantos.client.library.blockchains.factory import _blockchain_clients
 from pantos.client.library.blockchains.factory import get_blockchain_client
-from pantos.client.library.blockchains.fantom import FantomClient
 from pantos.client.library.blockchains.polygon import PolygonClient
 from pantos.client.library.blockchains.solana import SolanaClient
+from pantos.client.library.blockchains.sonic import SonicClient
 from pantos.client.library.protocol import get_supported_protocol_versions
 
 
@@ -47,8 +47,8 @@ def _get_blockchain_client_class(blockchain):
         return CronosClient
     if blockchain is Blockchain.ETHEREUM:
         return EthereumClient
-    if blockchain is Blockchain.FANTOM:
-        return FantomClient
+    if blockchain is Blockchain.SONIC:
+        return SonicClient
     if blockchain is Blockchain.POLYGON:
         return PolygonClient
     if blockchain is Blockchain.SOLANA:
