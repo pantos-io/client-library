@@ -170,7 +170,7 @@ blockchains:
             - !ENV ${SONIC_FALLBACK_PROVIDER:https://rpc.testnet.soniclabs.com/}
         average_block_time: !ENV tag:yaml.org,2002:int ${SONIC_AVERAGE_BLOCK_TIME:1}
         blocks_per_query: !ENV tag:yaml.org,2002:int ${SONIC_BLOCKS_PER_QUERY:2000}
-        chain_id: !ENV tag:yaml.org,2002:int ${SONIC_CHAIN_ID:4002}
+        chain_id: !ENV tag:yaml.org,2002:int ${SONIC_CHAIN_ID:64165}
         confirmations: !ENV tag:yaml.org,2002:int ${SONIC_CONFIRMATIONS:3}
         hub: !ENV ${SONIC_HUB}
         forwarder: !ENV ${SONIC_FORWARDER}
