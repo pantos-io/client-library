@@ -29,7 +29,7 @@ isort = "5.13.2"
 mypy = "1.13.0"
 types-pyyaml = "6.0.12.20240917"
 types-requests = "2.32.0.20241016"
-yapf = "0.40.2"
+yapf = "0.43.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "4.0.1"
