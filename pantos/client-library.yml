@@ -13,7 +13,7 @@ blockchains:
         active: !ENV tag:yaml.org,2002:bool ${AVALANCHE_ACTIVE:true}
         provider: !ENV ${AVALANCHE_PROVIDER:https://rpc.ankr.com/avalanche_fuji}
         fallback_providers:
-            - !ENV ${AVALANCHE_FALLBACK_PROVIDER:https://rpc.ankr.com/avalanche_fuji}
+            - !ENV ${AVALANCHE_FALLBACK_PROVIDER:https://avalanche-fuji-c-chain-rpc.publicnode.com}
         average_block_time: !ENV tag:yaml.org,2002:int ${AVALANCHE_AVERAGE_BLOCK_TIME:3}
         blocks_per_query: !ENV tag:yaml.org,2002:int ${AVALANCHE_BLOCKS_PER_QUERY:2000}
         chain_id: !ENV tag:yaml.org,2002:int ${AVALANCHE_CHAIN_ID:43113}
