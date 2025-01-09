@@ -67,7 +67,9 @@ jobs:
           # Copy the file
           cp tmp/wheel/*.dist-info/METADATA tmp/sdist/*/PKG-INFO
           # Tar the sdist again
-          tar -czf dist/$(ls dist | grep .tar.gz) -C tmp/sdist/ .
+          cd tmp/sdist/*
+          tar -czf ../../../dist/$(basename ../../../dist/*.tar.gz) *
+          cd ../../..
           # Remove the temporary directories
           rm -rf tmp
 
@@ -130,51 +132,4 @@ jobs:
       - uses: sigstore/gh-action-sigstore-python@v3.0.0
         with:
           inputs: release/*
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: signed-build
-          path: release/*.whl
-
-      - name: Upload release assets
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file: "./release/*"
-          file_glob: true
-          overwrite: true
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.event.release.tag_name }}
-      
-      - uses: robinraju/release-downloader@v1.9
-        name: Download tarball
-        with:
-          tag: ${{ github.event.release.tag_name }}
-          tarBall: true
-          zipBall: true
-          fileName: '*'
-          out-file-path: external-release
-          preRelease: ${{ github.event.release.prerelease }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-
-      - name: List directory
-        run: |
-          ls -lha external-release
-          # Remove all the files in external-release that are also present in release
-          for file in $(ls release); do
-            rm -f external-release/$file
-          done
-
-      - uses: sigstore/gh-action-sigstore-python@v2.1.1
-        with:
-          inputs: external-release/*
-
-      - name: Upload signed source code
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: "./external-release/*"
-          artifactErrorsFailBuild: true
-          allowUpdates: true
-          tag: ${{ github.event.release.tag_name }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
+          release-signing-artifacts: true

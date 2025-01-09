@@ -38,7 +38,7 @@ One of the most significant advantages of using Pantos is that the protocol has 
 
 #### Python Version
 
-The Pantos Client Library supports **Python 3.10** or higher. Ensure that you have the correct Python version installed before the installation steps. You can download the latest version of Python from the official [Python website](https://www.python.org/downloads/).
+The Pantos Client Library supports **Python 3.12** or higher. Ensure that you have the correct Python version installed before the installation steps. You can download the latest version of Python from the official [Python website](https://www.python.org/downloads/).
 
 
 
