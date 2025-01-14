@@ -1871,12 +1871,12 @@ files = [
 
 [[package]]
 name = "pantos-common"
-version = "4.2.0"
+version = "4.3.0"
 description = "Common code for Pantos off-chain components."
 optional = false
 python-versions = "<4.0,>=3.12"
 files = [
-    {file = "pantos_common-4.2.0-py3-none-any.whl", hash = "sha256:ce638be494d8a6b5d20dfd1b06f56ede9fcf6fdbf84c4073162a8fae3680f92f"},
+    {file = "pantos_common-4.3.0-py3-none-any.whl", hash = "sha256:ffd36d3156b0118739aa86758cb11dcbb7688e0552ce0f1b6be07a879626bf41"},
 ]
 
 [package.dependencies]
@@ -3252,4 +3252,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "b9fb2b17989ca9732d68eb3c6369e51c3619359ef2cc41b1321c7b7273f3d580"
+content-hash = "ffd2be3f6733b1d0642adc07b1ae4fcaba45c72f527fead3c4b844b567abe4f8"
