@@ -32,7 +32,7 @@ types-requests = "2.32.0.20241016"
 yapf = "0.43.0"
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "4.0.1"
+pre-commit = "4.1.0"
 
 [tool.poetry.dependencies]
 pantos-common = "4.3.0"
