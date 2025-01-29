@@ -23,7 +23,7 @@ pytest = "8.3.4"
 pytest-cov = "6.0.0"
 
 [tool.poetry.group.lint.dependencies]
-bandit = "1.8.0"
+bandit = "1.8.2"
 flake8 = "7.1.1"
 isort = "6.0.0"
 mypy = "1.14.1"
