@@ -1,6 +1,6 @@
 protocol:
     mainnet: !ENV ${PROTOCOL_MAINNET:1.0.0}
-    testnet: !ENV ${PROTOCOL_TESTNET:0.1.0}
+    testnet: !ENV ${PROTOCOL_TESTNET:0.3.0}
 
 token_creator:
     url: !ENV ${TOKEN_CREATOR_URL:https://creatorb.testnet.pantos.io}
