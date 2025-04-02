@@ -27,7 +27,7 @@ bandit = "1.8.2"
 flake8 = "7.2.0"
 isort = "6.0.0"
 mypy = "1.15.0"
-types-pyyaml = "6.0.12.20241230"
+types-pyyaml = "6.0.12.20250402"
 types-requests = "2.32.0.20241016"
 yapf = "0.43.0"
 
